@@ -1,17 +1,24 @@
 # lsbase/api_client/ls_api.py
 
 import asyncio
+import logging # 로깅 모듈 임포트
 from typing import Any, List, Dict, AsyncGenerator
 from ..core.api_interface import TradingAPI
 from ..core.exceptions import APIRequestError
 from ..openapi_client.OpenApi import OpenApi, ResponseValue
 from ..core.exceptions import APIRequestError, AuthenticationError, InvalidInputError, NetworkError
 
+# 모듈 레벨 로거 설정
+logger = logging.getLogger(__name__)
+
 class LSTradingAPI(TradingAPI):
     def __init__(self, open_api_client: OpenApi):
         self._client = open_api_client
 
     async def query(self, tr_code: str, params: Dict[str, Any], tr_cont: str = "N", tr_cont_key: str = "") -> ResponseValue:
+        # InBlock(요청) 데이터 로그 (DEBUG 레벨)
+        logger.debug(f"[Request] TR: {tr_code}, InBlock: {params}")
+        
         try:
             response = await self._client.request(tr_code, params, tr_cont=tr_cont, tr_cont_key=tr_cont_key)
             
@@ -19,6 +26,9 @@ class LSTradingAPI(TradingAPI):
             if not response:
                 raise NetworkError(self._client.last_message, tr_code=tr_code)
 
+            # OutBlock(응답) 데이터 로그 (DEBUG 레벨)
+            logger.debug(f"[Response] TR: {tr_code}, OutBlock: {response.body}")
+            
             rsp_cd = response.body.get("rsp_cd")
             # 성공이 아닌 모든 경우
             if rsp_cd != "00000":

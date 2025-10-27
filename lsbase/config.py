@@ -23,6 +23,10 @@ DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
 
+# --- Logger Settings ---
+# .env 파일에서 로그 레벨을 읽어오되, 설정이 없으면 'INFO'를 기본값으로 사용합니다.
+LOG_LEVEL = os.getenv("LOG_LEVEL", "INFO").upper()
+
 def validate_config():
     """필수 설정값이 로드되었는지 확인합니다."""
     if not all([APP_KEY, APP_SECRET, ACCOUNT_NO]):
