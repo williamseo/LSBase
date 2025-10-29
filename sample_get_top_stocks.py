@@ -30,7 +30,7 @@ def print_stock_list(title: str, stocks: list[MarketCapStock]):
               
     print("=" * 80)
 async def main():
-    client = MarketClient()
+    client = MarketClient(False)
     try:
         if not await client.connect():
             return

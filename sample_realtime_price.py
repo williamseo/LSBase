@@ -21,7 +21,7 @@ def on_samsung_price_update(sender, trcode, key, realtimedata):
         print(f"[실시간 체결] 시간: {formatted_time}, 현재가: {price: ,d} 원, 체결량: {cvolume: ,d} 주")
 
 async def main():
-    client = MarketClient()
+    client = MarketClient(False)
     samsung_symbol = "005930"
     
     try:

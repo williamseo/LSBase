@@ -4,7 +4,7 @@ import asyncio
 from lsbase import MarketClient
 
 async def main():
-    client = MarketClient()
+    client = MarketClient(monitor_market_state=False)
     try:
         if not await client.connect():
             return

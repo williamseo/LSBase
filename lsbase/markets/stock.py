@@ -15,11 +15,12 @@ class StockMarket(MarketBase):
         self._spec = spec # spec 객체를 멤버 변수로 저장
 
     async def get_quote(self, symbol: str) -> Quote:
-        tr = self._spec.주식.주식_시세.주식현재가_시세_조회
+        tr = self._spec.주식.주식_시세.주식현재가_시세조회
         
         # 요청 템플릿을 사용해 파라미터 구성
         params = tr.get_request_template()
         params['t1102InBlock']['shcode'] = symbol
+        params['t1102InBlock']['exchgubun'] = "K"
         
         try:
             response = await self._api.query(tr.code, params)
