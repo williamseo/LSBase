@@ -2,6 +2,8 @@
 
 from pydantic import BaseModel, Field
 from typing import Optional
+from enum import Enum
+from datetime import datetime
 
 # --- API 응답 모델 ---
 
@@ -28,6 +30,22 @@ class MarketCapStock(BaseModel):
     code: str
     price: int
     market_cap_in_b_krw: int
+
+class MarketStatus(str, Enum):
+    """시장의 현재 운영 상태를 나타내는 열거형"""
+    UNKNOWN = "UNKNOWN"               # 알 수 없음 (초기 상태)
+    PRE_MARKET = "PRE_MARKET"         # 장전 동시호가 또는 프리마켓
+    OPEN = "OPEN"                     # 정규장 진행 중
+    POST_MARKET = "POST_MARKET"       # 장후 동시호가 또는 애프터마켓
+    CLOSED = "CLOSED"                 # 장 마감
+    DANILGA = "DANILGA"               # 시간외 단일가
+
+class MarketState(BaseModel):
+    """특정 시장의 상태 정보를 담는 모델"""
+    market_name: str
+    status: MarketStatus = MarketStatus.UNKNOWN
+    last_updated: Optional[datetime] = None
+    raw_jstatus_code: Optional[str] = None # 원본 상태 코드 저장
 
 
 # --- 저수준(Low-level) API TR 모델 ---
