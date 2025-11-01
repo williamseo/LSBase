@@ -74,27 +74,37 @@ class TrSpec:
         필수 필드와 그 설명을 포함하여 개발자가 어떤 값을 넣어야 할지 쉽게 알 수 있도록 돕습니다.
         """
         template: Dict[str, Dict[str, str]] = {}
-        current_block: Optional[str] = None
-        
+        in_block_key: Optional[str] = None
+
+        # 1. 명세(self.request_body)를 순회하여 실제 InBlock 키를 찾습니다.
+        #    (예: "CSPAT00601InBlock1")
         for field in self.request_body:
-            field_name: str = _clean_field_name(field.get('name', ''))
-            
-            # InBlock 시작을 감지 (e.g., "CSPAT00601InBlock")
+            field_name = _clean_field_name(field.get('name', ''))
             if 'InBlock' in field_name:
-                current_block = field_name
-                template[current_block] = {}
+                in_block_key = field_name
+                break
+
+        # 2. 명세에서 InBlock 키를 찾지 못한 경우, TR코드를 기반으로 기본값을 생성합니다.
+        #    (보통 InBlock 뒤에 숫자 '1'이 붙는 경우가 많으므로 이를 기본으로 합니다.)
+        if not in_block_key:
+            in_block_key = f"{self.code}InBlock1"
+        
+        template[in_block_key] = {}
+
+        # 3. InBlock에 속하는 필드들을 템플릿에 추가합니다.
+        for field in self.request_body:
+            field_name = _clean_field_name(field.get('name', ''))
+            # InBlock 키 자체는 건너뜁니다.
+            if 'InBlock' in field_name:
                 continue
             
-            if current_block:
-                # 필드 정보를 템플릿에 추가
-                is_required: bool = field.get('required', 'N').upper() == 'Y'
-                description: str = field.get('description') or "설명 없음" # None일 경우 대비
-                
-                # 플레이스홀더 텍스트 생성
-                req_text = "필수" if is_required else "선택"
-                placeholder = f"{req_text}: {field.get('korean_name', '')} ({description})"
-                
-                template[current_block][field_name] = placeholder
+            is_required: bool = field.get('required', 'N').upper() == 'Y'
+            description: str = field.get('description') or "설명 없음"
+            
+            req_text = "필수" if is_required else "선택"
+            placeholder = f"{req_text}: {field.get('korean_name', '')} ({description})"
+            
+            template[in_block_key][field_name] = placeholder
 
         return template
 

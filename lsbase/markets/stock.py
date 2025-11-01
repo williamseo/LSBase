@@ -32,24 +32,46 @@ class StockMarket(MarketBase):
     async def place_order(self, symbol: str, quantity: int, price: int, side: OrderSide, order_type: OrderType) -> OrderResponse:
         tr = self._spec.주식.주식_주문.현물주문
         
-        # Pydantic 모델 대신 요청 템플릿 사용 (혹은 둘 다 활용 가능)
         params = tr.get_request_template()
-        in_block = params[f'{tr.code}InBlock']
+        
+        try:
+            in_block_key = next(key for key in params if 'InBlock' in key)
+        except StopIteration:
+            raise KeyError(f"'{tr.code}'에 대한 InBlock 키를 찾을 수 없습니다.")
+
+        in_block = params[in_block_key]
         
         in_block['IsuNo'] = f"A{symbol}" # 실제 API 규격에 맞게 'A' 접두사 추가
         in_block['OrdQty'] = quantity
         in_block['OrdPrc'] = price
         in_block['BnsTpCode'] = "2" if side == OrderSide.BUY else "1"
         in_block['OrdprcPtnCode'] = "03" if order_type == OrderType.MARKET else "00"
+        in_block['MgntrnCode'] = "000"  # 신용거래코드 (000: 보통)
+        in_block['LoanDt'] = ""
+        in_block['OrdCndiTpCode'] = "0"
         
         try:
             response = await self._api.query(tr.code, params)
-            data = response.body.get(f"{tr.code}OutBlock")
+            
+            # --- 수정된 부분: OutBlock 키를 동적으로 찾습니다 ---
+            # 주문 응답은 보통 OutBlock2에 주문번호가 들어 있습니다.
+            data = None
+            if f"{tr.code}OutBlock2" in response.body:
+                data = response.body.get(f"{tr.code}OutBlock2")
+            elif f"{tr.code}OutBlock" in response.body:
+                 data = response.body.get(f"{tr.code}OutBlock")
+            else:
+                raise KeyError("주문 응답에서 OutBlock 데이터를 찾을 수 없습니다.")
+
+            is_success = response.body.get("rsp_cd", "").startswith("00")
+
             return OrderResponse(
-                is_success=True,
-                order_id=data.get("OrdNo"),
+                is_success=is_success,
+                # data.get("OrdNo")를 str()로 감싸줍니다.
+                order_id=str(data.get("OrdNo")) if is_success else "",
                 message=response.body.get("rsp_msg", "주문 성공")
             )
+
         except APIRequestError as e:
             return OrderResponse(is_success=False, order_id="", message=str(e))
 
@@ -57,11 +79,23 @@ class StockMarket(MarketBase):
         tr = self._spec.주식.주식_계좌.현물계좌예수금_주문가능금액_총평가_조회
         
         params = tr.get_request_template()
-        params[f'{tr.code}InBlock']['BalCreTp'] = "0"
+
+        try:
+            in_block_key = next(key for key in params if 'InBlock' in key)
+        except StopIteration:
+            raise KeyError(f"'{tr.code}'에 대한 InBlock 키를 찾을 수 없습니다.")
+        
+        params[in_block_key]['BalCreTp'] = "0"
         
         try:
             response = await self._api.query(tr.code, params)
-            data_list = response.body.get(f"{tr.code}OutBlock")
+            
+            try:
+                out_block_key = next(key for key in response.body if 'OutBlock' in key)
+            except StopIteration:
+                 raise ValueError("계좌 잔고 데이터 블록(OutBlock)을 찾을 수 없습니다.")
+
+            data_list = response.body.get(out_block_key)
             if data_list:
                 return AccountBalanceSummary.model_validate(data_list[0])
             raise ValueError("계좌 잔고 데이터가 없습니다.")
@@ -98,15 +132,60 @@ class StockMarket(MarketBase):
             
         return all_stocks
 
-
-    # --- 아래는 향후 구현을 위한 플레이스홀더 ---
     async def modify_order(self, org_order_no: str, symbol: str, quantity: int, price: int) -> OrderResponse:
-        print("modify_order가 호출되었으나 아직 구현되지 않았습니다.")
-        pass
+        tr = self._spec.find_by_code("CSPAT00701")
+        if not tr:
+            raise ValueError("TR 명세 'CSPAT00701' (현물주문정정)을 찾을 수 없습니다.")
+
+        params = tr.get_request_template()
+        in_block_key = next(key for key in params if 'InBlock' in key)
+        in_block = params[in_block_key]
+
+        in_block['OrgOrdNo'] = str(org_order_no)
+        in_block['IsuNo'] = f"A{symbol}"
+        in_block['OrdprcPtnCode'] = "00"
+        in_block['OrdQty'] = str(quantity)
+        in_block['OrdPrc'] = str(price)
+        
+        try:
+            response = await self._api.query(tr.code, params)
+            data = response.body.get(f"{tr.code}OutBlock2")
+            is_success = response.body.get("rsp_cd", "").startswith("00")
+            
+            return OrderResponse(
+                is_success=is_success,
+                order_id=str(data.get("OrdNo")) if is_success else "",
+                message=response.body.get("rsp_msg", "정정주문 성공")
+            )
+        except APIRequestError as e:
+            return OrderResponse(is_success=False, order_id="", message=str(e))
 
     async def cancel_order(self, org_order_no: str, symbol: str, quantity: int) -> OrderResponse:
-        print("cancel_order가 호출되었으나 아직 구현되지 않았습니다.")
-        pass
+        tr = self._spec.find_by_code("CSPAT00801")
+        if not tr:
+            raise ValueError("TR 명세 'CSPAT00801' (현물주문취소)를 찾을 수 없습니다.")
+        
+        params = tr.get_request_template()
+        in_block_key = next(key for key in params if 'InBlock' in key)
+        in_block = params[in_block_key]
+        
+        in_block['OrgOrdNo'] = str(org_order_no)
+        in_block['IsuNo'] = f"A{symbol}"
+        in_block['OrdQty'] = str(quantity)
+        
+        try:
+            response = await self._api.query(tr.code, params)
+            data = response.body.get(f"{tr.code}OutBlock2")
+            is_success = response.body.get("rsp_cd", "").startswith("00")
+            
+            return OrderResponse(
+                is_success=is_success,
+                order_id=str(data.get("OrdNo")) if is_success else "",
+                message=response.body.get("rsp_msg", "취소주문 성공")
+            )
+        except APIRequestError as e:
+            return OrderResponse(is_success=False, order_id="", message=str(e))
+
 
     async def subscribe_realtime(self, key: str, data_type: RealtimeType) -> bool:
         """
@@ -191,3 +270,25 @@ class StockMarket(MarketBase):
         except APIRequestError as e:
             raise ConnectionError(f"서버 시간 조회 실패: {e}") from e
 
+    async def get_managed_stocks(self) -> set[str]:
+        """
+        관리 종목으로 지정된 주식의 종목코드 목록을 조회합니다. (t1404)
+        :return: 관리 종목 코드(shcode)의 set
+        """
+        tr = self._spec.주식.주식_시세.관리_불성실_투자유의조회    
+        
+        params = tr.get_request_template()
+        params[f'{tr.code}InBlock']['gubun'] = "0"  # 0: 전체
+        params[f'{tr.code}InBlock']['jongchk'] = "1" # 1: 관리종목
+
+        managed_codes = set()
+        try:
+            # 관리종목은 페이지네이션이 없을 가능성이 높지만, continuous_query 사용
+            async for item in self._api.continuous_query(tr.code, params):
+                if 'shcode' in item:
+                    managed_codes.add(item['shcode'])
+            return managed_codes
+        except APIRequestError as e:
+            # 오류가 발생해도 비어있는 set을 반환하여 전체 로직이 멈추지 않도록 처리
+            print(f"경고: 관리 종목 조회에 실패했습니다. {e}")
+            return set()

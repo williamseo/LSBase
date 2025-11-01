@@ -31,7 +31,8 @@ class LSTradingAPI(TradingAPI):
             
             rsp_cd = response.body.get("rsp_cd")
             # 성공이 아닌 모든 경우
-            if rsp_cd != "00000":
+            #if rsp_cd != "00000":
+            if not rsp_cd.startswith("00"):
                 msg = response.body.get("rsp_msg", "알 수 없는 오류")
                 # 특정 에러 코드에 따라 예외를 분기
                 if rsp_cd == "IGW00121": # 예시: 인증 토큰 오류 코드
@@ -49,12 +50,11 @@ class LSTradingAPI(TradingAPI):
             
     async def continuous_query(self, tr_code: str, params: Dict[str, Any]) -> AsyncGenerator[Dict[str, Any], None]:
         
-        tr_cont = "N"    # 최초 조회 시에는 tr_cont가 "N"
-        tr_cont_key = "" # 최초 조회 시에는 비워두거나 "0"
+        tr_cont = "N"
+        tr_cont_key = ""
 
         while True:
             try:
-                # 다음 페이지를 요청할 때는 이전 응답의 tr_cont, tr_cont_key를 사용
                 response = await self.query(tr_code, params, tr_cont=tr_cont, tr_cont_key=tr_cont_key)
             except APIRequestError as e:
                 logger.error(f"연속 조회 중 오류 발생: {e}")
@@ -68,18 +68,40 @@ class LSTradingAPI(TradingAPI):
             for item in batch:
                 yield item
 
-            # 다음 조회가 없으면 루프 종료
             if response.tr_cont != "Y":
                 break
             
-            # 다음 조회를 위해 상태 업데이트
             tr_cont = response.tr_cont
             tr_cont_key = response.tr_cont_key
             
-            # 일부 TR은 다음 페이지를 위해 입력값(idx)도 변경해야 할 수 있음
-            # 이 부분은 TR 명세에 따라 추가적인 처리가 필요할 수 있음
+            continuation_out_block_key = f"{tr_code}OutBlock"
+            continuation_data = response.body.get(continuation_out_block_key)
             
-            await asyncio.sleep(1)  # API Throttling
+            in_block_key = f"{tr_code}InBlock"
+            
+            if isinstance(continuation_data, dict) and in_block_key in params:
+                # t1404의 'cts_shcode' 처리: 서버가 준 값을 그대로 사용해야 하므로 .strip()을 적용하지 않음
+                if 'cts_shcode' in continuation_data and 'cts_shcode' in params[in_block_key]:
+                    next_cts_key = continuation_data['cts_shcode']
+                    
+                    # 키가 비어있거나 공백으로만 채워져 있으면 종료 (이때만 .strip()으로 내용물 확인)
+                    if not next_cts_key.strip():
+                        break
+                        
+                    params[in_block_key]['cts_shcode'] = next_cts_key
+                    logger.debug(f"다음 연속 조회를 위해 'cts_shcode'를 '{next_cts_key}'로 업데이트합니다.")
+                
+                # t1444의 'idx' 처리: int 또는 str 타입이 올 수 있으므로 str()로 변환 후 .strip() 적용
+                elif 'idx' in continuation_data and 'idx' in params[in_block_key]:
+                    next_idx_key = str(continuation_data['idx']).strip()
+                    
+                    if not next_idx_key:
+                        break
+                    
+                    params[in_block_key]['idx'] = next_idx_key
+                    logger.debug(f"다음 연속 조회를 위해 'idx'를 '{next_idx_key}'로 업데이트합니다.")
+
+            await asyncio.sleep(1)
 
     async def subscribe_realtime(self, tr_code: str, tr_key: str) -> bool:
         return await self._client.add_realtime(tr_code, tr_key)
