@@ -18,7 +18,7 @@ class MarketClient:
     def __init__(self, monitor_market_state: bool = True):
         setup_logger()
 
-        self.spec = TrCodeAdapter(specs_filepath='ls_openapi_specs.json')
+        self.spec = TrCodeAdapter(specs_filepath='lsbase/tools/ls_openapi_specs.json')
         logger.info("TR 명세 어댑터(spec)가 성공적으로 로드되었습니다.")
 
         self._open_api = OpenApi()

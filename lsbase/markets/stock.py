@@ -3,11 +3,13 @@
 from ..core.base import MarketBase
 from ..core.enum import OrderSide, OrderType, RealtimeType
 from ..core.models import (
-    OrderResponse, AccountBalanceSummary, Quote, MarketCapStock,
-    CSPAT00601InBlock, CSPAQ12200InBlock
+    OrderResponse, AccountBalanceSummary, Quote, MarketCapStock
 )
 from ..core.exceptions import APIRequestError
 from ..tr_adapter import TrCodeAdapter
+
+from .. import generated_models as gen_models # 1. 자동 생성 모델 임포트
+from pydantic import ValidationError
 
 class StockMarket(MarketBase):
     def __init__(self, api, spec: TrCodeAdapter, account_no, account_pw):
@@ -15,177 +17,194 @@ class StockMarket(MarketBase):
         self._spec = spec # spec 객체를 멤버 변수로 저장
 
     async def get_quote(self, symbol: str) -> Quote:
+        """종목 현재가 시세(t1102)를 조회합니다."""
         tr = self._spec.주식.주식_시세.주식현재가_시세조회
         
-        # 요청 템플릿을 사용해 파라미터 구성
-        params = tr.get_request_template()
-        params['t1102InBlock']['shcode'] = symbol
-        params['t1102InBlock']['exchgubun'] = "K"
+        # 2. 자동 생성된 요청 모델을 사용하여 요청 데이터를 구성합니다.
+        #    t1102는 InBlock이 하나뿐이므로 간단합니다.
+        in_block = gen_models.T1102InBlock(shcode=symbol)
+        request_model = gen_models.T1102Request(t1102InBlock=in_block)
         
         try:
-            response = await self._api.query(tr.code, params)
-            data = response.body.get("t1102OutBlock")
-            return Quote.model_validate(data)
-        except APIRequestError as e:
+            # 3. 모델을 딕셔너리로 변환하여 API를 호출합니다.
+            response = await self._api.query(tr.code, request_model.model_dump())
+            
+            # 4. 응답 본문을 자동 생성된 응답 모델로 파싱(검증)합니다.
+            parsed_response = gen_models.T1102Response.model_validate(response.body)
+            data = parsed_response.t1102OutBlock
+            
+            if not data:
+                raise ValueError("t1102 응답에서 OutBlock 데이터를 찾을 수 없습니다.")
+
+            # 5. 최종적으로 사용자에게는 기존과 동일한 'Quote' 모델로 변환하여 반환합니다.
+            #    이렇게 하면 라이브러리 내부 구현이 바뀌어도 사용자 코드는 영향을 받지 않습니다.
+            return Quote.model_validate(data.model_dump())
+
+        except (APIRequestError, ValueError, AttributeError) as e:
+            # Pydantic 유효성 검사 실패(AttributeError) 등 다양한 예외를 포괄적으로 처리
             raise ConnectionError(f"시세 조회 실패 ({symbol}): {e}") from e
 
     async def place_order(self, symbol: str, quantity: int, price: int, side: OrderSide, order_type: OrderType) -> OrderResponse:
+        """현물 주문(CSPAT00601)을 실행합니다."""
         tr = self._spec.주식.주식_주문.현물주문
-        
-        params = tr.get_request_template()
-        
-        try:
-            in_block_key = next(key for key in params if 'InBlock' in key)
-        except StopIteration:
-            raise KeyError(f"'{tr.code}'에 대한 InBlock 키를 찾을 수 없습니다.")
 
-        in_block = params[in_block_key]
-        
-        in_block['IsuNo'] = f"A{symbol}" # 실제 API 규격에 맞게 'A' 접두사 추가
-        in_block['OrdQty'] = quantity
-        in_block['OrdPrc'] = price
-        in_block['BnsTpCode'] = "2" if side == OrderSide.BUY else "1"
-        in_block['OrdprcPtnCode'] = "03" if order_type == OrderType.MARKET else "00"
-        in_block['MgntrnCode'] = "000"  # 신용거래코드 (000: 보통)
-        in_block['LoanDt'] = ""
-        in_block['OrdCndiTpCode'] = "0"
-        
+        # 1. 자동 생성된 요청 모델을 사용하여 요청 데이터를 구성합니다.
+        in_block = gen_models.Cspat00601InBlock1(
+            IsuNo=f"A{symbol}",         # 종목번호 (API 규격: 'A' + 종목코드)
+            OrdQty=quantity,           # 주문수량
+            OrdPrc=price,              # 주문가격
+            BnsTpCode="2" if side == OrderSide.BUY else "1",          # 매매구분 (2: 매수, 1: 매도)
+            OrdprcPtnCode="03" if order_type == OrderType.MARKET else "00", # 호가유형 (00: 지정가, 03: 시장가)
+            MgntrnCode="000",          # 신용거래코드 (000: 보통)
+            LoanDt="",                 # 대출일 (공백)
+            OrdCndiTpCode="0",         # 주문조건구분 (0: 없음)
+            MbrNo="NXT"
+        )
+        request_model = gen_models.Cspat00601Request(CSPAT00601InBlock1=in_block)
+
         try:
-            response = await self._api.query(tr.code, params)
+            # 2. 모델을 딕셔너리로 변환하여 API를 호출합니다.
+            response = await self._api.query(tr.code, request_model.model_dump(exclude_none=True))
             
-            # --- 수정된 부분: OutBlock 키를 동적으로 찾습니다 ---
-            # 주문 응답은 보통 OutBlock2에 주문번호가 들어 있습니다.
-            data = None
-            if f"{tr.code}OutBlock2" in response.body:
-                data = response.body.get(f"{tr.code}OutBlock2")
-            elif f"{tr.code}OutBlock" in response.body:
-                 data = response.body.get(f"{tr.code}OutBlock")
-            else:
-                raise KeyError("주문 응답에서 OutBlock 데이터를 찾을 수 없습니다.")
+            # 3. 응답 본문을 자동 생성된 응답 모델로 파싱(검증)합니다.
+            parsed_response = gen_models.Cspat00601Response.model_validate(response.body)
 
-            is_success = response.body.get("rsp_cd", "").startswith("00")
+            is_success = parsed_response.rsp_cd.startswith("00")
+            order_id = ""
+            
+            # 4. 타입-안전하게 속성에 접근하여 주문번호를 가져옵니다.
+            if is_success and parsed_response.CSPAT00601OutBlock2:
+                order_id = str(parsed_response.CSPAT00601OutBlock2.OrdNo)
 
             return OrderResponse(
                 is_success=is_success,
-                # data.get("OrdNo")를 str()로 감싸줍니다.
-                order_id=str(data.get("OrdNo")) if is_success else "",
-                message=response.body.get("rsp_msg", "주문 성공")
+                order_id=order_id,
+                message=parsed_response.rsp_msg
             )
 
         except APIRequestError as e:
+            # API 레벨에서 발생한 오류 처리
             return OrderResponse(is_success=False, order_id="", message=str(e))
+        except (ValueError, AttributeError) as e:
+            # Pydantic 모델 파싱 실패 등 데이터 구조 문제 처리
+            return OrderResponse(is_success=False, order_id="", message=f"주문 응답 처리 실패: {e}")
 
     async def get_account_balance(self) -> AccountBalanceSummary:
+        """현물계좌 예수금/주문가능금액/총평가(CSPAQ12200)를 조회합니다."""
         tr = self._spec.주식.주식_계좌.현물계좌예수금_주문가능금액_총평가_조회
-        
-        params = tr.get_request_template()
+
+        in_block = gen_models.Cspaq12200InBlock1(
+            RecCnt=0,
+            MgmtBrnNo="",    
+            BalCreTp="0"
+        )
+        request_model = gen_models.Cspaq12200Request(CSPAQ12200InBlock1=in_block)
 
         try:
-            in_block_key = next(key for key in params if 'InBlock' in key)
-        except StopIteration:
-            raise KeyError(f"'{tr.code}'에 대한 InBlock 키를 찾을 수 없습니다.")
-        
-        params[in_block_key]['BalCreTp'] = "0"
-        
-        try:
-            response = await self._api.query(tr.code, params)
+            response = await self._api.query(tr.code, request_model.model_dump(exclude_none=True))
+            parsed_response = gen_models.Cspaq12200Response.model_validate(response.body)
+
+            # ★★★★★ 여기가 수정된 부분입니다 ★★★★★
+            # CSPAQ12200OutBlock2가 리스트인지 단일 객체인지 확인하고 처리합니다.
+            out_block_data = parsed_response.CSPAQ12200OutBlock2
             
-            try:
-                out_block_key = next(key for key in response.body if 'OutBlock' in key)
-            except StopIteration:
-                 raise ValueError("계좌 잔고 데이터 블록(OutBlock)을 찾을 수 없습니다.")
-
-            data_list = response.body.get(out_block_key)
-            if data_list:
-                return AccountBalanceSummary.model_validate(data_list[0])
-            raise ValueError("계좌 잔고 데이터가 없습니다.")
-        except APIRequestError as e:
+            if out_block_data:
+                # 리스트면 첫 번째 항목을, 단일 객체면 그 자체를 사용합니다.
+                account_data = out_block_data[0] if isinstance(out_block_data, list) else out_block_data
+                return AccountBalanceSummary.model_validate(account_data.model_dump())
+            
+            raise ValueError("계좌 잔고 데이터(OutBlock2)가 없습니다.")
+        except (APIRequestError, ValidationError, ValueError, AttributeError, IndexError) as e:
             raise ConnectionError(f"계좌 잔고 조회 실패: {e}") from e
 
     async def get_top_market_cap_stocks(self, market_type: str, limit: int = None) -> list[MarketCapStock]:
+        """시가총액 상위(t1444) 종목 목록을 조회합니다."""
         if market_type.upper() not in ["KOSPI", "KOSDAQ"]:
             raise ValueError("market_type은 'KOSPI' 또는 'KOSDAQ'이어야 합니다.")
         
         tr = self._spec.주식.주식_상위종목.시가총액상위
         upcode = "001" if market_type.upper() == "KOSPI" else "301"
 
-        params = tr.get_request_template()
-        params[f'{tr.code}InBlock']['upcode'] = upcode
-        params[f'{tr.code}InBlock']['idx'] = 0
-
+        # 1. 자동 생성된 요청 모델을 사용하여 요청 데이터를 구성합니다.
+        in_block = gen_models.T1444InBlock(upcode=upcode, idx="0") # idx는 연속 조회를 위해 str 사용
+        request_model = gen_models.T1444Request(t1444InBlock=in_block)
+        
         all_stocks = []
         rank = 1
         
-        async for item in self._api.continuous_query(tr.code, params):
-            stock_info = {
-                "rank": rank,
-                "name": item.get("hname"),
-                "code": item.get("shcode"),
-                "price": int(item.get("price", 0)),
-                "market_cap_in_b_krw": int(item.get("total", 0)) # 단위가 '백만원'이므로 억 단위 변환 필요
-            }
-            all_stocks.append(MarketCapStock.model_validate(stock_info))
-            
-            if limit is not None and len(all_stocks) >= limit:
-                break
-            rank += 1
-            
-        return all_stocks
+        try:
+            # 2. continuous_query에 모델을 딕셔너리로 변환하여 전달합니다.
+            async for item_dict in self._api.continuous_query(tr.code, request_model.model_dump()):
+                
+                # 3. 반환된 딕셔너리(item_dict)를 자동 생성된 Item 모델로 파싱(검증)합니다.
+                item = gen_models.T1444OutBlock1Item.model_validate(item_dict)
+                
+                # 4. 타입-안전하게 속성에 접근하여 데이터를 추출하고 최종 모델로 변환합니다.
+                stock_info = MarketCapStock(
+                    rank=rank,
+                    name=item.hname,
+                    code=item.shcode,
+                    price=item.price,
+                    market_cap_in_b_krw=item.total # 'total' 필드가 시가총액(백만원 단위)
+                )
+                all_stocks.append(stock_info)
+                
+                if limit is not None and len(all_stocks) >= limit:
+                    break
+                rank += 1
+                
+            return all_stocks
+        except (APIRequestError, ValueError, AttributeError) as e:
+            raise ConnectionError(f"시가총액 상위 종목 조회 실패: {e}") from e
 
     async def modify_order(self, org_order_no: str, symbol: str, quantity: int, price: int) -> OrderResponse:
-        tr = self._spec.find_by_code("CSPAT00701")
-        if not tr:
-            raise ValueError("TR 명세 'CSPAT00701' (현물주문정정)을 찾을 수 없습니다.")
+        """현물 주문 정정(CSPAT00701)을 실행합니다."""
+        tr_code = "CSPAT00701" # TrCodeAdapter에 아직 없을 수 있으므로 직접 지정
 
-        params = tr.get_request_template()
-        in_block_key = next(key for key in params if 'InBlock' in key)
-        in_block = params[in_block_key]
+        in_block = gen_models.Cspat00701InBlock1(
+            OrgOrdNo=int(org_order_no), # 원주문번호는 int 타입
+            IsuNo=f"A{symbol}",
+            OrdprcPtnCode="00",        # 지정가
+            OrdQty=quantity,
+            OrdPrc=price,
+            OrdCndiTpCode="0"
+        )
+        request_model = gen_models.Cspat00701Request(CSPAT00701InBlock1=in_block)
 
-        in_block['OrgOrdNo'] = str(org_order_no)
-        in_block['IsuNo'] = f"A{symbol}"
-        in_block['OrdprcPtnCode'] = "00"
-        in_block['OrdQty'] = str(quantity)
-        in_block['OrdPrc'] = str(price)
-        
         try:
-            response = await self._api.query(tr.code, params)
-            data = response.body.get(f"{tr.code}OutBlock2")
-            is_success = response.body.get("rsp_cd", "").startswith("00")
-            
+            response = await self._api.query(tr_code, request_model.model_dump(exclude_none=True))
+            parsed_response = gen_models.Cspat00701Response.model_validate(response.body)
+            is_success = parsed_response.rsp_cd.startswith("00")
+            order_id = ""
+            if is_success and parsed_response.CSPAT00701OutBlock2:
+                order_id = str(parsed_response.CSPAT00701OutBlock2.OrdNo)
             return OrderResponse(
-                is_success=is_success,
-                order_id=str(data.get("OrdNo")) if is_success else "",
-                message=response.body.get("rsp_msg", "정정주문 성공")
+                is_success=is_success, order_id=order_id, message=parsed_response.rsp_msg
             )
-        except APIRequestError as e:
-            return OrderResponse(is_success=False, order_id="", message=str(e))
+        except (APIRequestError, ValidationError, ValueError, AttributeError) as e:
+            return OrderResponse(is_success=False, order_id="", message=f"주문 정정 처리 실패: {e}")
 
     async def cancel_order(self, org_order_no: str, symbol: str, quantity: int) -> OrderResponse:
-        tr = self._spec.find_by_code("CSPAT00801")
-        if not tr:
-            raise ValueError("TR 명세 'CSPAT00801' (현물주문취소)를 찾을 수 없습니다.")
-        
-        params = tr.get_request_template()
-        in_block_key = next(key for key in params if 'InBlock' in key)
-        in_block = params[in_block_key]
-        
-        in_block['OrgOrdNo'] = str(org_order_no)
-        in_block['IsuNo'] = f"A{symbol}"
-        in_block['OrdQty'] = str(quantity)
-        
-        try:
-            response = await self._api.query(tr.code, params)
-            data = response.body.get(f"{tr.code}OutBlock2")
-            is_success = response.body.get("rsp_cd", "").startswith("00")
-            
-            return OrderResponse(
-                is_success=is_success,
-                order_id=str(data.get("OrdNo")) if is_success else "",
-                message=response.body.get("rsp_msg", "취소주문 성공")
-            )
-        except APIRequestError as e:
-            return OrderResponse(is_success=False, order_id="", message=str(e))
+        """현물 주문 취소(CSPAT00801)를 실행합니다."""
+        tr_code = "CSPAT00801"
 
+        in_block = gen_models.Cspat00801InBlock1(
+            OrgOrdNo=int(org_order_no),
+            IsuNo=f"A{symbol}",
+            OrdQty=quantity
+        )
+        request_model = gen_models.Cspat00801Request(CSPAT00801InBlock1=in_block)
+
+        try:
+            response = await self._api.query(tr_code, request_model.model_dump(exclude_none=True))
+            parsed_response = gen_models.Cspat00801Response.model_validate(response.body)
+            is_success = parsed_response.rsp_cd.startswith("00")
+            # 취소 주문은 보통 새로 발급되는 주문번호가 중요하지 않으므로 order_id는 비워둠
+            return OrderResponse(
+                is_success=is_success, order_id="", message=parsed_response.rsp_msg
+            )
+        except (APIRequestError, ValidationError, ValueError, AttributeError) as e:
+            return OrderResponse(is_success=False, order_id="", message=f"주문 취소 처리 실패: {e}")
 
     async def subscribe_realtime(self, key: str, data_type: RealtimeType) -> bool:
         """
@@ -239,56 +258,48 @@ class StockMarket(MarketBase):
         return await self._api.unsubscribe_realtime(tr_code, key)
 
     async def get_server_time(self) -> str:
-        """
-        서버의 현재 시간을 조회합니다 (t0167).
-
-        :return: "YYYY-MM-DD HH:MM:SS" 형식의 시간 문자열
-        """
-        # TrCodeAdapter를 사용하여 '서버시간조회' TR 명세를 가져옵니다.
-        # ls_tr_overview.json 구조에 따라 경로를 지정합니다.
+        """서버의 현재 시간(t0167)을 조회합니다."""
         tr = self._spec.기타.기타_시간조회.서버시간조회
-        
-        # t0167은 InBlock에 특별한 입력값이 필요 없으므로 템플릿을 그대로 사용합니다.
-        params = tr.get_request_template()
-        params['t0167InBlock']['id'] = ""
-        
+
+        # t0167은 InBlock이 있지만 특별한 입력값이 필요 없음
+        in_block = gen_models.T0167InBlock(id="")
+        request_model = gen_models.T0167Request(t0167InBlock=in_block)
+
         try:
-            response = await self._api.query(tr.code, params)
-            data = response.body.get("t0167OutBlock")
-            if data:
-                date_str = data.get("dt", "--------")       # YYYYMMDD
-                time_str = data.get("time", "------------") # HHMMSSssssss
-                
-                # 보기 좋은 형태로 포맷팅합니다.
-                formatted_time = (
-                    f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]} "
-                    f"{time_str[:2]}:{time_str[2:4]}:{time_str[4:6]}"
-                )
-                return formatted_time
-            
+            response = await self._api.query(tr.code, request_model.model_dump())
+            parsed_response = gen_models.T0167Response.model_validate(response.body)
+            data = parsed_response.t0167OutBlock
+
+            if data and data.dt and data.time:
+                date_str = data.dt       # YYYYMMDD
+                time_str = data.time     # HHMMSSssssss
+
+                return f"{date_str[:4]}-{date_str[4:6]}-{date_str[6:8]} {time_str[:2]}:{time_str[2:4]}:{time_str[4:6]}"
+
             raise ValueError("서버 시간 응답 데이터가 없습니다.")
-        except APIRequestError as e:
+        except (APIRequestError, ValidationError, ValueError, AttributeError) as e:
             raise ConnectionError(f"서버 시간 조회 실패: {e}") from e
 
     async def get_managed_stocks(self) -> set[str]:
-        """
-        관리 종목으로 지정된 주식의 종목코드 목록을 조회합니다. (t1404)
-        :return: 관리 종목 코드(shcode)의 set
-        """
-        tr = self._spec.주식.주식_시세.관리_불성실_투자유의조회    
-        
-        params = tr.get_request_template()
-        params[f'{tr.code}InBlock']['gubun'] = "0"  # 0: 전체
-        params[f'{tr.code}InBlock']['jongchk'] = "1" # 1: 관리종목
+        """관리 종목(t1404) 목록을 조회합니다."""
+        tr = self._spec.주식.주식_시세.관리_불성실_투자유의조회
+
+        in_block = gen_models.T1404InBlock(
+            gubun="0",       # 0: 전체
+            jongchk="1",     # 1: 관리종목
+            cts_shcode="",   # 연속 조회 키 (초기에는 공백)
+            cts_date="",
+            cts_time=""
+        )
+        request_model = gen_models.T1404Request(t1404InBlock=in_block)
 
         managed_codes = set()
         try:
-            # 관리종목은 페이지네이션이 없을 가능성이 높지만, continuous_query 사용
-            async for item in self._api.continuous_query(tr.code, params):
-                if 'shcode' in item:
-                    managed_codes.add(item['shcode'])
+            async for item_dict in self._api.continuous_query(tr.code, request_model.model_dump(exclude_none=True)):
+                item = gen_models.T1404OutBlock1Item.model_validate(item_dict)
+                if item.shcode:
+                    managed_codes.add(item.shcode)
             return managed_codes
-        except APIRequestError as e:
-            # 오류가 발생해도 비어있는 set을 반환하여 전체 로직이 멈추지 않도록 처리
+        except (APIRequestError, ValidationError, ValueError, AttributeError) as e:
             print(f"경고: 관리 종목 조회에 실패했습니다. {e}")
-            return set()
+            return set() # 오류가 발생해도 비어있는 set을 반환

@@ -1,0 +1,35 @@
+# -*- coding: utf-8 -*-
+# 이 파일은 generate_code.py (v5.0)에 의해 자동으로 생성되었습니다. 수동으로 수정하지 마세요.
+
+from typing import List, Optional
+from pydantic import BaseModel, Field
+
+# --- Pydantic 모델 정의 ---
+{% for tr in tr_specs %}
+# =====================================================================================
+# [{{ tr.code }}] {{ tr.name }}
+# =====================================================================================
+
+# --- {{ tr.code }} 요청 모델 ---
+{% if tr.request_models %}
+{% for model in tr.request_models %}
+class {{ model.class_name }}(BaseModel):
+{{ model.fields_str }}
+{% endfor %}
+{% else %}
+# {{ tr.code }}는 요청 본문(InBlock)이 없습니다.
+pass
+{% endif %}
+
+# --- {{ tr.code }} 응답 모델 ---
+{% if tr.response_models %}
+{% for model in tr.response_models %}
+class {{ model.class_name }}(BaseModel):
+{{ model.fields_str }}
+{% endfor %}
+{% else %}
+# {{ tr.code }}는 응답 본문(OutBlock)이 없습니다.
+pass
+{% endif %}
+
+{% endfor %}

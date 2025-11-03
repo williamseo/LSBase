@@ -1,30 +1,35 @@
-# lsbase/core/models.py
+# lsbase/core/models.py (수정된 버전)
 
 from pydantic import BaseModel, Field
 from typing import Optional
 from enum import Enum
 from datetime import datetime
 
-# --- API 응답 모델 ---
+# --- API 응답 모델 (High-level) ---
+# 이 모델들은 라이브러리 사용자와 직접 소통하는 고수준 추상화 모델이므로 유지합니다.
 
 class OrderResponse(BaseModel):
+    """주문 요청에 대한 표준 응답 모델"""
     is_success: bool
     order_id: str
     message: str
 
 class AccountBalanceSummary(BaseModel):
+    """계좌 잔고의 핵심 정보를 요약한 모델"""
     cash: int = Field(alias="Dps", description="예수금")
     total_assets: int = Field(alias="DpsastTotamt", description="예탁자산총액")
-    total_purchase_amount: int = Field(alias="PchsAmt", description="총매입금액")
+    total_purchase_amount: Optional[int] = Field(default=0, alias="PchsAmt", description="총매입금액")
     total_evaluation_amount: int = Field(alias="BalEvalAmt", description="잔고평가금액")
     profit_loss_rate: float = Field(alias="PnlRat", description="손익율")
 
 class Quote(BaseModel):
+    """단일 종목의 현재 시세를 나타내는 모델"""
     symbol_name: str = Field(alias="hname")
     current_price: float = Field(alias="price")
-    volume: int
+    volume: int = Field(alias="volume")
 
 class MarketCapStock(BaseModel):
+    """시가총액 상위 종목 정보를 담는 모델"""
     rank: int
     name: str
     code: str
@@ -46,26 +51,3 @@ class MarketState(BaseModel):
     status: MarketStatus = MarketStatus.UNKNOWN
     last_updated: Optional[datetime] = None
     raw_jstatus_code: Optional[str] = None # 원본 상태 코드 저장
-
-
-# --- 저수준(Low-level) API TR 모델 ---
-
-# 현물주문 (CSPAT00601)
-class CSPAT00601InBlock(BaseModel):
-    IsuNo: str
-    OrdQty: int
-    OrdPrc: int
-    BnsTpCode: str  # 1: 매도, 2: 매수
-    OrdprcPtnCode: str # 00: 지정가, 03: 시장가
-
-class CSPAT00601OutBlock(BaseModel):
-    OrdNo: str
-    OrdTime: str
-
-# 현물계좌 예수금/주문가능금액 조회 (CSPAQ12200)
-class CSPAQ12200InBlock(BaseModel):
-    BalCreTp: str = "0"
-
-class CSPAQ12200OutBlock(AccountBalanceSummary):
-    # AccountBalanceSummary의 모든 필드를 상속받아 사용
-    pass
