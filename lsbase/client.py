@@ -25,6 +25,10 @@ class MarketClient:
                  specs_filepath: str = None):
 
         setup_logger()
+
+        self.app_key = app_key
+        self.app_secret = app_secret
+
         base_dir = os.path.dirname(os.path.abspath(__file__))
         final_specs_path = specs_filepath or os.path.join(base_dir, 'tools', 'ls_openapi_specs.json')
 
@@ -34,7 +38,6 @@ class MarketClient:
         self._open_api = OpenApi()
         self._api = LSTradingAPI(self._open_api)
         
-        # <-- 3. StockMarket에 spec 객체 주입
         self.stock = StockMarket(
             api=self._api, 
             spec=self.spec, # spec 객체를 전달
@@ -60,7 +63,8 @@ class MarketClient:
 
     async def connect(self) -> bool:
         logger.info("API 서버에 연결을 시도합니다...")
-        is_connected = await self._open_api.login(config.APP_KEY, config.APP_SECRET)
+        is_connected = await self._open_api.login(self.app_key, self.app_secret)
+
         if is_connected:
             logger.info("API 서버 연결 성공.")
         else:
