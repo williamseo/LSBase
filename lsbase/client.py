@@ -1,4 +1,5 @@
 # lsbase/client.py
+import os
 import logging
 import asyncio
 from datetime import datetime
@@ -15,10 +16,19 @@ from .core.models import MarketState, MarketStatus
 logger = logging.getLogger(__name__)
 
 class MarketClient:
-    def __init__(self, monitor_market_state: bool = True):
-        setup_logger()
+    def __init__(self,
+                 app_key: str,
+                 app_secret: str,
+                 account_no: str,
+                 account_pw: str,
+                 monitor_market_state: bool = True,
+                 specs_filepath: str = None):
 
-        self.spec = TrCodeAdapter(specs_filepath='lsbase/tools/ls_openapi_specs.json')
+        setup_logger()
+        base_dir = os.path.dirname(os.path.abspath(__file__))
+        final_specs_path = specs_filepath or os.path.join(base_dir, 'tools', 'ls_openapi_specs.json')
+
+        self.spec = TrCodeAdapter(specs_filepath=final_specs_path)
         logger.info("TR 명세 어댑터(spec)가 성공적으로 로드되었습니다.")
 
         self._open_api = OpenApi()
@@ -28,8 +38,8 @@ class MarketClient:
         self.stock = StockMarket(
             api=self._api, 
             spec=self.spec, # spec 객체를 전달
-            account_no=config.ACCOUNT_NO, 
-            account_pw=config.ACCOUNT_PASSWORD
+            account_no=account_no, 
+            account_pw=account_pw
         )
 
         self._monitor_market_state = monitor_market_state

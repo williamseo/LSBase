@@ -1,5 +1,6 @@
 # lsbase/markets/stock.py
 
+from typing import List, Dict, Any
 from ..core.base import MarketBase
 from ..core.enum import OrderSide, OrderType, RealtimeType
 from ..core.models import (
@@ -280,6 +281,38 @@ class StockMarket(MarketBase):
         except (APIRequestError, ValidationError, ValueError, AttributeError) as e:
             raise ConnectionError(f"서버 시간 조회 실패: {e}") from e
 
+    async def get_transaction_history(self, start_date: str, end_date: str) -> List[Dict[str, Any]]:
+        tr_code = "CDPCQ04700"
+        params = {
+            f"{tr_code}InBlock": {
+                "AcntNo": self.account_no, "Pwd": self.account_pw,
+                "QrySrtDt": start_date, "QryEndDt": end_date,
+                "SrtNo": "0", "QryTp": "3"
+            }
+        }
+        transactions = []
+        try:
+            response = await self._api.query(tr_code, params)
+            transaction_list = response.body.get(f"{tr_code}OutBlock3", [])
+            for item in transaction_list:
+                tx = {
+                    'broker_order_id': item.get('OrdNo', ''),
+                    'date': item.get('TrdDt', ''),
+                    'instrument_code': item.get('IsuNo', '').replace('A', ''),
+                    'instrument_name': item.get('IsuNm', ''),
+                    'side': "BUY" if item.get('BnsTpCode', '') == '2' else "SELL",
+                    'quantity': int(item.get('TrdQty', 0)),
+                    'price': float(item.get('TrdUprc', 0))
+                }
+                transactions.append(tx)
+            return transactions
+        except APIRequestError as e:
+            logger.error(f"거래 내역 조회 실패: {e}")
+            return None
+        except Exception as e:
+            logger.error(f"거래 내역 처리 중 오류 발생: {e}", exc_info=True)
+            return None
+
     async def get_managed_stocks(self) -> set[str]:
         """관리 종목(t1404) 목록을 조회합니다."""
         tr = self._spec.주식.주식_시세.관리_불성실_투자유의조회
@@ -303,3 +336,27 @@ class StockMarket(MarketBase):
         except (APIRequestError, ValidationError, ValueError, AttributeError) as e:
             print(f"경고: 관리 종목 조회에 실패했습니다. {e}")
             return set() # 오류가 발생해도 비어있는 set을 반환
+
+    async def get_portfolio(self) -> List[Dict[str, Any]]:
+        tr_code = "t0424"
+        params = {
+            f"{tr_code}InBlock": {
+                "accno": self.account_no, "passwd": self.account_pw,
+                "prcgb": "1", "chegb": "0", "dangb": "0", "charge": "1"
+            }
+        }
+        holdings = []
+        try:
+            async for item in self._api.continuous_query(tr_code, params):
+                holding = {
+                    'instrument_code': item.get('expcode', ''),
+                    'quantity': int(item.get('janqty', 0)),
+                    'avg_price': float(item.get('pamt', 0)),
+                    'current_price': float(item.get('price', 0)),
+                    'pnl_rate': float(item.get('sunikrt', 0))
+                }
+                holdings.append(holding)
+            return holdings
+        except APIRequestError as e:
+            logger.error(f"포트폴리오 조회 실패: {e}")
+            return []

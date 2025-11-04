@@ -15,12 +15,13 @@ class OrderResponse(BaseModel):
     message: str
 
 class AccountBalanceSummary(BaseModel):
-    """계좌 잔고의 핵심 정보를 요약한 모델"""
-    cash: int = Field(alias="Dps", description="예수금")
-    total_assets: int = Field(alias="DpsastTotamt", description="예탁자산총액")
-    total_purchase_amount: Optional[int] = Field(default=0, alias="PchsAmt", description="총매입금액")
-    total_evaluation_amount: int = Field(alias="BalEvalAmt", description="잔고평가금액")
-    profit_loss_rate: float = Field(alias="PnlRat", description="손익율")
+    cash: int = Field(alias="Dps")
+    orderable_amount: int = Field(alias="MnyOrdAbleAmt")
+    total_assets: int = Field(alias="DpsastTotamt")
+    total_purchase_amount: int = Field(alias="InvstOrgAmt", default=0)
+    total_evaluation_amount: int = Field(alias="BalEvalAmt", default=0)
+    profit_loss_amount: int = Field(alias="InvstPlAmt", default=0)
+    profit_loss_rate: float = Field(alias="PnlRat", default=0.0)
 
 class Quote(BaseModel):
     """단일 종목의 현재 시세를 나타내는 모델"""

@@ -1,12 +1,9 @@
 import os
 from dotenv import load_dotenv
 
-# .env 파일의 환경 변수를 로드합니다.
-load_dotenv()
-
 # --- LS Securities API ---
-APP_KEY = os.getenv("APP_KEY")
-APP_SECRET = os.getenv("APP_SECRET")
+APP_KEY = os.getenv("LS_APP_KEY")
+APP_SECRET = os.getenv("LS_APP_SECRET")
 
 # --- LS Securities Account ---
 ACCOUNT_NO = os.getenv("ACCOUNT_NO")
@@ -32,4 +29,4 @@ def validate_config():
     if not all([APP_KEY, APP_SECRET, ACCOUNT_NO]):
         raise ValueError("필수 환경 변수(APP_KEY, APP_SECRET, ACCOUNT_NO)가 .env 파일에 설정되지 않았습니다.")
 
-validate_config()
+#validate_config()
