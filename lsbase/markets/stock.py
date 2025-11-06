@@ -353,7 +353,8 @@ class StockMarket(MarketBase):
                     'quantity': int(item.get('janqty', 0)),
                     'avg_price': float(item.get('pamt', 0)),
                     'current_price': float(item.get('price', 0)),
-                    'pnl_rate': float(item.get('sunikrt', 0))
+                    'pnl_rate': float(item.get('sunikrt', 0)),
+                    'market_type': 'KR_STOCK'
                 }
                 holdings.append(holding)
             return holdings
