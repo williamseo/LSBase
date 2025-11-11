@@ -93,13 +93,26 @@ class LSTradingAPI(TradingAPI):
                 
                 # t1444의 'idx' 처리: int 또는 str 타입이 올 수 있으므로 str()로 변환 후 .strip() 적용
                 elif 'idx' in continuation_data and 'idx' in params[in_block_key]:
-                    next_idx_key = str(continuation_data['idx']).strip()
-                    
-                    if not next_idx_key:
+                    raw_idx_key = str(continuation_data['idx']).strip()
+
+                    try:
+                        # 1. 실수/문자열을 float으로 처리하여 실수 포맷 제거 후 int로 변환
+                        int_idx = int(float(raw_idx_key))
+                    except ValueError:
+                        # 변환 불가능하면 종료
+                        logger.debug(f"t1444 연속 조회를 종료합니다. (IDX 값 변환 실패 또는 종료 키: '{raw_idx_key}')")
                         break
-                    
+
+                    # 2. 다음 요청 키가 0이면 데이터가 없다는 뜻이므로 종료
+                    if int_idx == 0:
+                        logger.debug(f"t1444 연속 조회를 종료합니다. (Next idx is 0)")
+                        break
+
+                    next_idx_key = int_idx
+
                     params[in_block_key]['idx'] = next_idx_key
-                    logger.debug(f"다음 연속 조회를 위해 'idx'를 '{next_idx_key}'로 업데이트합니다.")
+                    logger.debug(f"다음 연속 조회를 위해 'idx'를 '{next_idx_key}'로 (INT) 업데이트합니다.")
+
 
             await asyncio.sleep(1)
 

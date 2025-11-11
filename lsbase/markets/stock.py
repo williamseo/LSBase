@@ -126,7 +126,7 @@ class StockMarket(MarketBase):
         upcode = "001" if market_type.upper() == "KOSPI" else "301"
 
         # 1. 자동 생성된 요청 모델을 사용하여 요청 데이터를 구성합니다.
-        in_block = gen_models.T1444InBlock(upcode=upcode, idx="0") # idx는 연속 조회를 위해 str 사용
+        in_block = gen_models.T1444InBlock(upcode=upcode, idx=0) # idx는 연속 조회를 위해 int 사용
         request_model = gen_models.T1444Request(t1444InBlock=in_block)
         
         all_stocks = []
