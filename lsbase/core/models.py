@@ -51,3 +51,14 @@ class MarketState(BaseModel):
     status: MarketStatus = MarketStatus.UNKNOWN
     last_updated: Optional[datetime] = None
     raw_jstatus_code: Optional[str] = None # 원본 상태 코드 저장
+
+class HistoricalPrice(BaseModel):
+    """기간별(일/주/월) 시세 정보를 담는 모델"""
+    date: str = Field(description="날짜 (YYYYMMDD)")
+    open: int = Field(description="시가")
+    high: int = Field(description="고가")
+    low: int = Field(description="저가")
+    close: int = Field(description="종가")
+    volume: int = Field(description="누적거래량")
+    value: int = Field(description="누적거래대금(단위:백만)")
+    change_rate: float = Field(alias="diff", description="등락율")

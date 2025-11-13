@@ -3,13 +3,14 @@
 from ..core.base import MarketBase
 from ..core.enum import OrderSide, OrderType, RealtimeType
 from ..core.models import (
-    OrderResponse, AccountBalanceSummary, Quote, MarketCapStock
+    OrderResponse, AccountBalanceSummary, Quote, MarketCapStock, HistoricalPrice
 )
 from ..core.exceptions import APIRequestError
 from ..tr_adapter import TrCodeAdapter
 
 from .. import generated_models as gen_models # 1. 자동 생성 모델 임포트
 from pydantic import ValidationError
+from datetime import datetime
 
 class StockMarket(MarketBase):
     def __init__(self, api, spec: TrCodeAdapter, account_no, account_pw):
@@ -279,6 +280,52 @@ class StockMarket(MarketBase):
             raise ValueError("서버 시간 응답 데이터가 없습니다.")
         except (APIRequestError, ValidationError, ValueError, AttributeError) as e:
             raise ConnectionError(f"서버 시간 조회 실패: {e}") from e
+
+    async def get_historical_data(self, symbol: str, period: str, start_date: str = "", count: int = 100) -> list[HistoricalPrice]:
+        """
+        기간별 주가(t1305) 데이터를 조회합니다. 연속 조회를 지원합니다.
+        
+        :param symbol: 종목코드 (e.g., "005930")
+        :param period: 조회 기간 단위 ("day", "week", "month")
+        :param start_date: 조회 시작일 (YYYYMMDD). 지정하지 않으면 최신 데이터부터 조회.
+        :param count: 조회할 데이터의 최대 개수
+        :return: HistoricalPrice 모델 객체의 리스트
+        """
+        period_map = {"day": 1, "week": 2, "month": 3}
+        if period.lower() not in period_map:
+            raise ValueError("period는 'day', 'week', 'month' 중 하나여야 합니다.")
+
+        tr = self._spec.주식.주식_시세.기간별주가
+        
+        # start_date가 없으면 오늘 날짜로 설정
+        request_date = start_date if start_date else datetime.now().strftime('%Y%m%d')
+
+        in_block = gen_models.T1305InBlock(
+            shcode=symbol,
+            dwmcode=period_map[period.lower()],
+            date=request_date,
+            idx=0, # 연속 조회 시작 인덱스
+            cnt=count if count <= 500 else 500 # API는 한번에 약 500~600개 반환
+        )
+        request_model = gen_models.T1305Request(t1305InBlock=in_block)
+
+        all_prices = []
+        try:
+            async for item_dict in self._api.continuous_query(tr.code, request_model.model_dump()):
+                # 자동 생성된 모델로 데이터 검증
+                item = gen_models.T1305OutBlock1Item.model_validate(item_dict)
+                # 사용자 친화적인 모델로 변환하여 추가
+                all_prices.append(HistoricalPrice.model_validate(item.model_dump()))
+
+                if len(all_prices) >= count:
+                    break
+            
+            return all_prices
+        except (APIRequestError, ValidationError, ValueError) as e:
+            # 존재하지 않는 종목코드 등 API 레벨 오류는 빈 리스트를 반환하여 처리
+            if "APBK0042" in str(e): # 입력값 오류 코드
+                return []
+            raise ConnectionError(f"기간별 주가 조회 실패 ({symbol}): {e}") from e
 
     async def get_managed_stocks(self) -> set[str]:
         """관리 종목(t1404) 목록을 조회합니다."""

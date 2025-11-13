@@ -112,6 +112,24 @@ class LSTradingAPI(TradingAPI):
 
                     params[in_block_key]['idx'] = next_idx_key
                     logger.debug(f"다음 연속 조회를 위해 'idx'를 '{next_idx_key}'로 (INT) 업데이트합니다.")
+                elif 'date' in continuation_data and 'idx' in continuation_data and 'dwmcode' in params[in_block_key]: # t1305 특정
+                    next_date = str(continuation_data.get('date', '')).strip()
+                    raw_next_idx = str(continuation_data.get('idx', '0')).strip()
+
+                    try:
+                        next_idx = int(float(raw_next_idx))
+                    except ValueError:
+                        logger.debug(f"t1305 연속 조회를 종료합니다. (IDX 값 변환 실패: '{raw_next_idx}')")
+                        break
+                    
+                    # 다음 조회할 날짜가 없거나, idx가 0이면(혹은 없으면) 종료
+                    if not next_date or next_idx == 0:
+                        logger.debug(f"t1305 연속 조회를 종료합니다. (Next date='{next_date}', idx={next_idx})")
+                        break
+
+                    params[in_block_key]['date'] = next_date
+                    params[in_block_key]['idx'] = next_idx
+                    logger.debug(f"다음 연속 조회를 위해 'date'를 '{next_date}', 'idx'를 '{next_idx}'로 업데이트합니다.")
 
 
             await asyncio.sleep(1)

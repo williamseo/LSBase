@@ -37,10 +37,10 @@ async def main():
 
         stock_market = client.stock
 
-        kospi_top_100 = await stock_market.get_top_market_cap_stocks("KOSPI", limit=100)
+        kospi_top_100 = await stock_market.get_top_market_cap_stocks("KOSPI", limit=500)
         print_stock_list("KOSPI 시가총액 Top 100", kospi_top_100)
         
-        kosdaq_top_100 = await stock_market.get_top_market_cap_stocks("KOSDAQ", limit=100)
+        kosdaq_top_100 = await stock_market.get_top_market_cap_stocks("KOSDAQ", limit=500)
         print_stock_list("KOSDAQ 시가총액 Top 100", kosdaq_top_100)
 
     except Exception as e:
