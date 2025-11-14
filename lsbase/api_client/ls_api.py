@@ -47,9 +47,8 @@ class LSTradingAPI(TradingAPI):
         
         except asyncio.TimeoutError as e: # aiohttp 타임아웃 처리
             raise NetworkError(f"Request timed out: {e}", tr_code=tr_code) from e
-            
+
     async def continuous_query(self, tr_code: str, params: Dict[str, Any]) -> AsyncGenerator[Dict[str, Any], None]:
-        
         tr_cont = "N"
         tr_cont_key = ""
 
@@ -77,62 +76,46 @@ class LSTradingAPI(TradingAPI):
             continuation_out_block_key = f"{tr_code}OutBlock"
             continuation_data = response.body.get(continuation_out_block_key)
             
-            in_block_key = f"{tr_code}InBlock"
+            # InBlock 키는 TR 코드와 이름 규칙이 다를 수 있으므로 params에서 직접 찾습니다.
+            in_block_key = next((key for key in params if key.endswith("InBlock")), None)
             
-            if isinstance(continuation_data, dict) and in_block_key in params:
-                # t1404의 'cts_shcode' 처리: 서버가 준 값을 그대로 사용해야 하므로 .strip()을 적용하지 않음
-                if 'cts_shcode' in continuation_data and 'cts_shcode' in params[in_block_key]:
-                    next_cts_key = continuation_data['cts_shcode']
-                    
-                    # 키가 비어있거나 공백으로만 채워져 있으면 종료 (이때만 .strip()으로 내용물 확인)
-                    if not next_cts_key.strip():
-                        break
-                        
-                    params[in_block_key]['cts_shcode'] = next_cts_key
-                    logger.debug(f"다음 연속 조회를 위해 'cts_shcode'를 '{next_cts_key}'로 업데이트합니다.")
+            if isinstance(continuation_data, dict) and in_block_key:
+                is_key_updated = False
                 
-                # t1444의 'idx' 처리: int 또는 str 타입이 올 수 있으므로 str()로 변환 후 .strip() 적용
-                elif 'idx' in continuation_data and 'idx' in params[in_block_key]:
-                    raw_idx_key = str(continuation_data['idx']).strip()
+                # OutBlock의 모든 키에 대해 반복 (e.g., 'cts_date', 'shcode', ...)
+                for key, next_value in continuation_data.items():
+                    # 해당 키가 InBlock에도 존재한다면, 연속 조회 키로 간주
+                    if key in params[in_block_key]:
+                        
+                        # 값이 비어있으면 연속 조회 종료
+                        if isinstance(next_value, str) and not next_value.strip():
+                            logger.debug(f"연속 조회 키 '{key}'가 비어있어 조회를 종료합니다.")
+                            is_key_updated = False
+                            break
+                            
+                        # 특정 키 'idx'가 0이면 종료 (기존 로직 유지)
+                        if key == 'idx':
+                            try:
+                                if int(float(str(next_value))) == 0:
+                                    logger.debug("다음 idx가 0이므로 조회를 종료합니다.")
+                                    is_key_updated = False
+                                    break
+                            except (ValueError, TypeError):
+                                pass
 
-                    try:
-                        # 1. 실수/문자열을 float으로 처리하여 실수 포맷 제거 후 int로 변환
-                        int_idx = int(float(raw_idx_key))
-                    except ValueError:
-                        # 변환 불가능하면 종료
-                        logger.debug(f"t1444 연속 조회를 종료합니다. (IDX 값 변환 실패 또는 종료 키: '{raw_idx_key}')")
-                        break
+                        # 다음 요청을 위해 InBlock의 파라미터 업데이트
+                        params[in_block_key][key] = next_value
+                        logger.debug(f"연속 조회를 위해 '{key}'를 '{next_value}'로 업데이트합니다.")
+                        is_key_updated = True
+                        # 가장 처음 발견된 공통 키를 연속 키로 간주하고 루프 탈출
+                        break 
+                
+                if not is_key_updated:
+                    break # 업데이트된 키가 없으면 전체 루프 종료
+            else:
+                break # OutBlock이나 InBlock 구조가 예상과 다르면 종료
 
-                    # 2. 다음 요청 키가 0이면 데이터가 없다는 뜻이므로 종료
-                    if int_idx == 0:
-                        logger.debug(f"t1444 연속 조회를 종료합니다. (Next idx is 0)")
-                        break
-
-                    next_idx_key = int_idx
-
-                    params[in_block_key]['idx'] = next_idx_key
-                    logger.debug(f"다음 연속 조회를 위해 'idx'를 '{next_idx_key}'로 (INT) 업데이트합니다.")
-                elif 'date' in continuation_data and 'idx' in continuation_data and 'dwmcode' in params[in_block_key]: # t1305 특정
-                    next_date = str(continuation_data.get('date', '')).strip()
-                    raw_next_idx = str(continuation_data.get('idx', '0')).strip()
-
-                    try:
-                        next_idx = int(float(raw_next_idx))
-                    except ValueError:
-                        logger.debug(f"t1305 연속 조회를 종료합니다. (IDX 값 변환 실패: '{raw_next_idx}')")
-                        break
-                    
-                    # 다음 조회할 날짜가 없거나, idx가 0이면(혹은 없으면) 종료
-                    if not next_date or next_idx == 0:
-                        logger.debug(f"t1305 연속 조회를 종료합니다. (Next date='{next_date}', idx={next_idx})")
-                        break
-
-                    params[in_block_key]['date'] = next_date
-                    params[in_block_key]['idx'] = next_idx
-                    logger.debug(f"다음 연속 조회를 위해 'date'를 '{next_date}', 'idx'를 '{next_idx}'로 업데이트합니다.")
-
-
-            await asyncio.sleep(1)
+            await asyncio.sleep(0.5) # API 부담을 줄이기 위해 0.5초 대기            
 
     async def subscribe_realtime(self, tr_code: str, tr_key: str) -> bool:
         return await self._client.add_realtime(tr_code, tr_key)
