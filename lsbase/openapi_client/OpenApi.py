@@ -81,6 +81,7 @@ class OpenApi:
         self._last_message:str = ""
         self._mac_address : str|None = None
         self._last_respose_value = None
+        self._ws_task = None
     
         # 이벤트 핸들러
         self._on_message = self._event_signal()
@@ -157,6 +158,14 @@ class OpenApi:
     async def close(self) -> None:
         """연결 종료"""
         self._connected = False
+
+        if self._ws_task:
+            self._ws_task.cancel()
+            try:
+                await self._ws_task
+            except asyncio.CancelledError:
+                pass
+
         if self._websocket and not self._websocket.closed:
             await self._websocket.close()
         if self._http and not self._http.closed:
@@ -216,8 +225,8 @@ class OpenApi:
         try:
             websocket = await  httpclient.ws_connect(WSS_URL_SIMULATION if self._is_simulation else WSS_URL_REAL)
             self._connected = not websocket.closed
-        except :
-            pass
+        except Exception as e:
+            self._last_message = str(e)
     
         if not self._connected:
             await httpclient.close()
@@ -225,7 +234,7 @@ class OpenApi:
             return False
     
         self._websocket = websocket
-        asyncio.create_task(self._websocket_listen())
+        self._ws_task = asyncio.create_task(self._websocket_listen())
         return True
 
     async def request(self, tr_cd:str, data:dict|str
@@ -281,7 +290,7 @@ class OpenApi:
             self._last_respose_value = result
             return result
         except Exception as e:
-            self._last_message = e
+            self._last_message = str(e)
 
         return None
 
@@ -305,7 +314,7 @@ class OpenApi:
                 try:
                     jsondata = json.loads(msg.data)
                 except Exception as e:
-                    self._last_message = e
+                    self._last_message = str(e)
                     await self._inner_on_mesage(f"websocket exception. {e}")
                     continue
                 header = jsondata.get("header", None)
@@ -321,11 +330,11 @@ class OpenApi:
                     if body != None:
                         await self._inner_on_realtime(tr_cd, tr_key, body)
             elif msg.type == aiohttp.WSMsgType.CLOSED:
-                self._last_message = msg
+                self._last_message = f"websocket closed: {msg}"
                 await self._inner_on_mesage(f"websocket closed. {msg}")
                 break
             elif msg.type == aiohttp.WSMsgType.ERROR:
-                self._last_message = msg
+                self._last_message = f"websocket error: {msg}"
                 await self._inner_on_mesage(f"websocket error. {msg}")
 
     async def _realtime_request(self, tr_cd:str, tr_key:str, tr_type:str) -> bool:
