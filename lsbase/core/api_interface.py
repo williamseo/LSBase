@@ -1,8 +1,11 @@
 # lsbase/core/api_interface.py
 
+from __future__ import annotations
+
 from abc import ABC, abstractmethod
-from typing import Any, Dict, List, AsyncGenerator
+from typing import Any, Dict, AsyncGenerator, Optional
 from ..openapi_client.OpenApi import ResponseValue
+from ..core.spec_models import TrSpec
 
 class TradingAPI(ABC):
     @abstractmethod
@@ -10,7 +13,10 @@ class TradingAPI(ABC):
         pass
 
     @abstractmethod
-    async def continuous_query(self, tr_code: str, params: Dict[str, Any]) -> AsyncGenerator[Dict[str, Any], None]:
+    async def continuous_query(
+        self, tr_code: str, params: Dict[str, Any],
+        spec: Optional[TrSpec] = None,
+    ) -> AsyncGenerator[Dict[str, Any], None]:
         pass
 
     @abstractmethod

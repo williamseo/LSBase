@@ -33,7 +33,7 @@ async def main():
             "edate": today, "etime": "",
             "cts_date": "", "cts_time": "", "comp_yn": "N",
         })
-        candles = [i async for i in client._api.continuous_query(tr.code, params)]
+        candles = [i async for i in client._api.continuous_query(tr.code, params, spec=tr)]
         print_chart(f"삼성전자 5분봉 ({len(candles)}개)", candles)
     except Exception as e:
         print(f"오류: {e}")

@@ -95,7 +95,7 @@ class StockMarket(MarketBase):
         rank = 1
         try:
             data_block = tr.continuation.data_block if tr.continuation else "t1444OutBlock1"
-            async for item_dict in self._api.continuous_query(tr.code, request):
+            async for item_dict in self._api.continuous_query(tr.code, request, spec=tr):
                 stock_info = MarketCapStock(
                     rank=rank,
                     name=item_dict.get("hname", ""),
@@ -201,7 +201,7 @@ class StockMarket(MarketBase):
         all_prices = []
         try:
             data_block = tr.continuation.data_block if tr.continuation else "t1305OutBlock1"
-            async for item_dict in self._api.continuous_query(tr.code, request):
+            async for item_dict in self._api.continuous_query(tr.code, request, spec=tr):
                 all_prices.append(HistoricalPrice.model_validate(item_dict))
                 if len(all_prices) >= count:
                     break
@@ -222,7 +222,7 @@ class StockMarket(MarketBase):
         })
         managed_codes = set()
         try:
-            async for item_dict in self._api.continuous_query(tr.code, request):
+            async for item_dict in self._api.continuous_query(tr.code, request, spec=tr):
                 shcode = item_dict.get("shcode", "")
                 if shcode:
                     managed_codes.add(shcode)

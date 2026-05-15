@@ -49,13 +49,14 @@ async def main():
 
         # --- 1. t8419 조회 (업종차트, 연속조회) ---
         print(f"\n[t8419] '{KOSPI_UPCODE}' 업종 데이터 조회를 시작합니다.")
-        params = client._repo["t8419"].build_request({
+        tr8419 = client._repo["t8419"]
+        params = tr8419.build_request({
             "shcode": KOSPI_UPCODE, "gubun": "3", "qrycnt": 2000,
             "sdate": start_date_str, "edate": end_date_str,
             "cts_date": "", "comp_yn": "N"
         })
 
-        t8419_data = [item async for item in client._api.continuous_query("t8419", params)]
+        t8419_data = [item async for item in client._api.continuous_query(tr8419.code, params, spec=tr8419)]
 
         if t8419_data:
             simplified = [
@@ -67,12 +68,13 @@ async def main():
 
         # --- 2. t1514 조회 (업종기간별추이, 연속조회) ---
         print(f"\n[t1514] '{KOSPI_UPCODE}' 업종 데이터 조회를 시작합니다.")
-        params = client._repo["t1514"].build_request({
+        tr1514 = client._repo["t1514"]
+        params = tr1514.build_request({
             "upcode": KOSPI_UPCODE, "gubun1": "1", "gubun2": "2",
             "cts_date": "", "cnt": 500, "rate_gbn": "1"
         })
 
-        t1514_data = [item async for item in client._api.continuous_query("t1514", params)]
+        t1514_data = [item async for item in client._api.continuous_query(tr1514.code, params, spec=tr1514)]
 
         if t1514_data:
             simplified = [

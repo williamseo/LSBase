@@ -10,7 +10,7 @@ async def fetch_rankings(client, gubun: str, type1: str, label: str):
     })
     results = []
     try:
-        async for item in client._api.continuous_query(tr.code, params):
+        async for item in client._api.continuous_query(tr.code, params, spec=tr):
             results.append(item)
     except Exception as e:
         pass

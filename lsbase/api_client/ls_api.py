@@ -2,11 +2,11 @@
 
 import asyncio
 import logging # 로깅 모듈 임포트
-from typing import Any, List, Dict, AsyncGenerator
+from typing import Any, Dict, AsyncGenerator, Optional
 from ..core.api_interface import TradingAPI
-from ..core.exceptions import APIRequestError
-from ..openapi_client.OpenApi import OpenApi, ResponseValue
 from ..core.exceptions import APIRequestError, AuthenticationError, InvalidInputError, NetworkError
+from ..openapi_client.OpenApi import OpenApi, ResponseValue
+from ..core.spec_models import TrSpec
 
 # 모듈 레벨 로거 설정
 logger = logging.getLogger(__name__)
@@ -48,74 +48,103 @@ class LSTradingAPI(TradingAPI):
         except asyncio.TimeoutError as e: # aiohttp 타임아웃 처리
             raise NetworkError(f"Request timed out: {e}", tr_code=tr_code) from e
 
-    async def continuous_query(self, tr_code: str, params: Dict[str, Any]) -> AsyncGenerator[Dict[str, Any], None]:
+    async def continuous_query(
+        self, tr_code: str, params: Dict[str, Any],
+        spec: Optional[TrSpec] = None,
+    ) -> AsyncGenerator[Dict[str, Any], None]:
         tr_cont = "N"
         tr_cont_key = ""
+
+        if spec and spec.continuation:
+            gen = self._continuous_with_spec(tr_code, params, spec, tr_cont, tr_cont_key)
+        else:
+            gen = self._continuous_heuristic(tr_code, params, tr_cont, tr_cont_key)
+
+        async for item in gen:
+            yield item
+
+    async def _continuous_with_spec(
+        self, tr_code: str, params: Dict[str, Any],
+        spec: TrSpec, tr_cont: str, tr_cont_key: str,
+    ) -> AsyncGenerator[Dict[str, Any], None]:
+        cont = spec.continuation
+        in_block_key = next((k for k in params if k.endswith("InBlock")), None)
 
         while True:
             try:
                 response = await self.query(tr_code, params, tr_cont=tr_cont, tr_cont_key=tr_cont_key)
             except APIRequestError as e:
-                logger.error(f"연속 조회 중 오류 발생: {e}")
+                logger.error("continuous query error for %s: %s", tr_code, e)
+                break
+
+            batch = response.body.get(cont.data_block, [])
+            if not batch:
+                break
+            for item in batch:
+                yield item
+
+            if response.tr_cont != "Y":
+                break
+            tr_cont = response.tr_cont
+            tr_cont_key = response.tr_cont_key
+
+            if in_block_key:
+                params, should_continue = cont.extract_next_params(
+                    response.body, params, in_block_key,
+                )
+                if not should_continue:
+                    break
+
+            await asyncio.sleep(0.5)
+
+    async def _continuous_heuristic(
+        self, tr_code: str, params: Dict[str, Any],
+        tr_cont: str, tr_cont_key: str,
+    ) -> AsyncGenerator[Dict[str, Any], None]:
+        while True:
+            try:
+                response = await self.query(tr_code, params, tr_cont=tr_cont, tr_cont_key=tr_cont_key)
+            except APIRequestError as e:
+                logger.error("continuous query error for %s: %s", tr_code, e)
                 break
 
             out_block_key = f"{tr_code}OutBlock1"
             batch = response.body.get(out_block_key, [])
             if not batch:
                 break
-
             for item in batch:
                 yield item
 
             if response.tr_cont != "Y":
                 break
-            
             tr_cont = response.tr_cont
             tr_cont_key = response.tr_cont_key
-            
-            continuation_out_block_key = f"{tr_code}OutBlock"
-            continuation_data = response.body.get(continuation_out_block_key)
-            
-            # InBlock 키는 TR 코드와 이름 규칙이 다를 수 있으므로 params에서 직접 찾습니다.
-            in_block_key = next((key for key in params if key.endswith("InBlock")), None)
-            
+
+            continuation_data = response.body.get(f"{tr_code}OutBlock")
+            in_block_key = next((k for k in params if k.endswith("InBlock")), None)
+
             if isinstance(continuation_data, dict) and in_block_key:
-                is_key_updated = False
-                
-                # OutBlock의 모든 키에 대해 반복 (e.g., 'cts_date', 'shcode', ...)
+                updated = False
                 for key, next_value in continuation_data.items():
-                    # 해당 키가 InBlock에도 존재한다면, 연속 조회 키로 간주
-                    if key in params[in_block_key]:
-                        
-                        # 값이 비어있으면 연속 조회 종료
-                        if isinstance(next_value, str) and not next_value.strip():
-                            logger.debug(f"연속 조회 키 '{key}'가 비어있어 조회를 종료합니다.")
-                            is_key_updated = False
-                            break
-                            
-                        # 특정 키 'idx'가 0이면 종료 (기존 로직 유지)
-                        if key == 'idx':
-                            try:
-                                if int(float(str(next_value))) == 0:
-                                    logger.debug("다음 idx가 0이므로 조회를 종료합니다.")
-                                    is_key_updated = False
-                                    break
-                            except (ValueError, TypeError):
-                                pass
-
-                        # 다음 요청을 위해 InBlock의 파라미터 업데이트
-                        params[in_block_key][key] = next_value
-                        logger.debug(f"연속 조회를 위해 '{key}'를 '{next_value}'로 업데이트합니다.")
-                        is_key_updated = True
-                        # 가장 처음 발견된 공통 키를 연속 키로 간주하고 루프 탈출
-                        break 
-                
-                if not is_key_updated:
-                    break # 업데이트된 키가 없으면 전체 루프 종료
+                    if key not in params[in_block_key]:
+                        continue
+                    if isinstance(next_value, str) and not next_value.strip():
+                        break
+                    if key == "idx":
+                        try:
+                            if int(float(str(next_value))) == 0:
+                                break
+                        except (ValueError, TypeError):
+                            pass
+                    params[in_block_key][key] = next_value
+                    updated = True
+                    break
+                if not updated:
+                    break
             else:
-                break # OutBlock이나 InBlock 구조가 예상과 다르면 종료
+                break
 
-            await asyncio.sleep(0.5) # API 부담을 줄이기 위해 0.5초 대기            
+            await asyncio.sleep(0.5)            
 
     async def subscribe_realtime(self, tr_code: str, tr_key: str) -> bool:
         return await self._client.add_realtime(tr_code, tr_key)

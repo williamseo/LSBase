@@ -40,7 +40,7 @@ async def main():
 
         results = []
         try:
-            async for item in client._api.continuous_query(tr.code, params):
+            async for item in client._api.continuous_query(tr.code, params, spec=tr):
                 value = int(item.get("value", 0))
                 if value >= MIN_VALUE:
                     results.append(item)
