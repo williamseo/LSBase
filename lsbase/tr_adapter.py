@@ -3,6 +3,13 @@ import re
 import warnings
 from typing import Dict, Any, List, Optional
 
+warnings.warn(
+    "tr_adapter.py는 deprecated되었습니다. "
+    "lsbase.core.spec_models.SpecRepository를 사용하세요.",
+    DeprecationWarning,
+    stacklevel=2,
+)
+
 # --- Helper Functions ---
 
 def _sanitize_name(name: str) -> str:

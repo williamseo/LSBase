@@ -6,8 +6,8 @@ from . import config
 from .openapi_client.OpenApi import OpenApi
 from .api_client.ls_api import LSTradingAPI
 from .markets.stock import StockMarket
-from .logger import setup_logger # 로거 설정 함수 임포트
-from .tr_adapter import TrCodeAdapter
+from .logger import setup_logger
+from .core.spec_models import SpecRepository
 from .core.enum import RealtimeType
 from .core.models import MarketState, MarketStatus
 
@@ -18,17 +18,16 @@ class MarketClient:
     def __init__(self, monitor_market_state: bool = True):
         setup_logger()
 
-        self.spec = TrCodeAdapter(specs_filepath='lsbase/tools/ls_openapi_specs.json')
-        logger.info("TR 명세 어댑터(spec)가 성공적으로 로드되었습니다.")
+        self._repo = SpecRepository(lazy=True)
+        logger.info("SpecRepository가 생성되었습니다.")
 
         self._open_api = OpenApi()
         self._api = LSTradingAPI(self._open_api)
         
-        # <-- 3. StockMarket에 spec 객체 주입
         self.stock = StockMarket(
-            api=self._api, 
-            spec=self.spec, # spec 객체를 전달
-            account_no=config.ACCOUNT_NO, 
+            api=self._api,
+            repo=self._repo,
+            account_no=config.ACCOUNT_NO,
             account_pw=config.ACCOUNT_PASSWORD
         )
 
