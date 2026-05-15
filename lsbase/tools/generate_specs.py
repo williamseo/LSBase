@@ -49,14 +49,19 @@ def infer_type(type_code: str, length: str | None) -> str:
     return TYPE_CODE_MAP.get(type_code, "str")
 
 
-def classify_tr(code: str, res_body: list, category: str) -> str:
+def classify_tr(code: str, res_body: list, category: str, req_example: dict) -> str:
     """TR 코드 + 응답 명세 + 카테고리 → TrClass 결정"""
     if not code:
         return "query"
     # OAuth 인증 TR
     if category == "OAuth 인증":
         return "query"
-    # 실시간: t나 C로 시작하지 않음 (token/revoke 등 제외)
+    # 해외/선물 REST TR (o*, g* 접두사)
+    if code.startswith(("o", "g")):
+        if req_example:
+            return "query"
+        return "realtime"
+    # 실시간: t나 C로 시작하지 않음 (token/revoke/o/g 제외)
     if not code.startswith("t") and not code.startswith("C"):
         return "realtime"
     # 연속조회: 응답에 cts_ 또는 cont/contkey 필드 있음
@@ -200,7 +205,7 @@ def main():
                     continue
 
                 tr_name = tr.get("name", "")
-                tr_class = classify_tr(code, tr.get("response_body", []), category)
+                tr_class = classify_tr(code, tr.get("response_body", []), category, tr.get("example", {}).get("request", {}))
                 market = CATEGORY_TO_MARKET.get(category, "etc")
 
                 req_blocks = parse_blocks(tr.get("request_body", []), "InBlock", False)

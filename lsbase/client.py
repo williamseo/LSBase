@@ -6,6 +6,9 @@ from . import config
 from .openapi_client.OpenApi import OpenApi
 from .api_client.ls_api import LSTradingAPI
 from .markets.stock import StockMarket
+from .markets.futures_options import FuturesOptionsMarket
+from .markets.overseas_stock import OverseasStockMarket
+from .markets.overseas_futures import OverseasFuturesMarket
 from .logger import setup_logger
 from .core.spec_models import SpecRepository
 from .core.enum import RealtimeType
@@ -25,10 +28,20 @@ class MarketClient:
         self._api = LSTradingAPI(self._open_api)
         
         self.stock = StockMarket(
-            api=self._api,
-            repo=self._repo,
-            account_no=config.ACCOUNT_NO,
-            account_pw=config.ACCOUNT_PASSWORD
+            api=self._api, repo=self._repo,
+            account_no=config.ACCOUNT_NO, account_pw=config.ACCOUNT_PASSWORD,
+        )
+        self.futures = FuturesOptionsMarket(
+            api=self._api, repo=self._repo,
+            account_no=config.ACCOUNT_NO, account_pw=config.ACCOUNT_PASSWORD,
+        )
+        self.overseas = OverseasStockMarket(
+            api=self._api, repo=self._repo,
+            account_no=config.ACCOUNT_NO, account_pw=config.ACCOUNT_PASSWORD,
+        )
+        self.overseas_futures = OverseasFuturesMarket(
+            api=self._api, repo=self._repo,
+            account_no=config.ACCOUNT_NO, account_pw=config.ACCOUNT_PASSWORD,
         )
 
         self._monitor_market_state = monitor_market_state

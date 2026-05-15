@@ -62,3 +62,39 @@ class HistoricalPrice(BaseModel):
     volume: int = Field(description="누적거래량")
     value: int = Field(description="누적거래대금(단위:백만)")
     change_rate: float = Field(alias="diff", description="등락율")
+
+
+# --- 시장별 모델 ---
+
+class FuturesQuote(BaseModel):
+    """선물/옵션 현재가"""
+    symbol_name: str = Field(default="", alias="hname")
+    current_price: float = Field(default=0, alias="price")
+    change: float = Field(default=0, alias="change")
+    change_rate: float = Field(default=0, alias="diff")
+    high: float = Field(default=0, alias="high")
+    low: float = Field(default=0, alias="low")
+    open: float = Field(default=0, alias="open")
+    previous_close: float = Field(default=0, alias="jnilclose")
+    volume: int = Field(default=0, alias="volume")
+
+class OverseasQuote(BaseModel):
+    """해외주식 현재가"""
+    symbol: str = Field(default="", alias="symbol")
+    symbol_name: str = Field(default="", alias="exchange")
+    current_price: float = Field(default=0, alias="price")
+    change: float = Field(default=0, alias="change")
+    change_rate: float = Field(default=0, alias="diff")
+    high: float = Field(default=0, alias="high")
+    low: float = Field(default=0, alias="low")
+    volume: int = Field(default=0, alias="volume")
+
+class OverseasFuturesQuote(BaseModel):
+    """해외선물 현재가"""
+    symbol: str = Field(default="", alias="Symbol")
+    symbol_name: str = Field(default="", alias="SymbolNm")
+    current_price: float = Field(default=0, alias="LastTrdPrc")
+    change: float = Field(default=0, alias="ChgPrc")
+    high: float = Field(default=0, alias="HighPrc")
+    low: float = Field(default=0, alias="LowPrc")
+    volume: int = Field(default=0, alias="Vol")

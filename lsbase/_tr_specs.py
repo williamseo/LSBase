@@ -15925,7 +15925,7 @@ SPECS: dict = {
     },
     "o3101": {
         "n": "해외선물마스터조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -15969,7 +15969,7 @@ SPECS: dict = {
     },
     "o3104": {
         "n": "해외선물 일별체결 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -15999,7 +15999,7 @@ SPECS: dict = {
     },
     "o3105": {
         "n": "해외선물 현재가(종목정보) 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -16075,7 +16075,7 @@ SPECS: dict = {
     },
     "o3106": {
         "n": "해외선물 현재가호가 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -16139,7 +16139,7 @@ SPECS: dict = {
     },
     "o3107": {
         "n": "해외선물 관심종목 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -16178,7 +16178,7 @@ SPECS: dict = {
     },
     "o3116": {
         "n": "해외선물 시간대별(Tick)체결 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -16210,7 +16210,7 @@ SPECS: dict = {
     },
     "o3121": {
         "n": "해외선물옵션 마스터 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -16263,7 +16263,7 @@ SPECS: dict = {
     },
     "o3123": {
         "n": "해외선물옵션 차트 분봉 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -16300,7 +16300,7 @@ SPECS: dict = {
     },
     "o3125": {
         "n": "해외선물옵션 현재가(종목정보) 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -16379,7 +16379,7 @@ SPECS: dict = {
     },
     "o3126": {
         "n": "해외선물옵션 현재가호가 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -16444,7 +16444,7 @@ SPECS: dict = {
     },
     "o3127": {
         "n": "해외선물옵션 관심종목 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -16487,7 +16487,7 @@ SPECS: dict = {
     },
     "o3128": {
         "n": "해외선물옵션 차트 일주월 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -16533,7 +16533,7 @@ SPECS: dict = {
     },
     "o3136": {
         "n": "해외선물옵션 시간대별 Tick 체결 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -16566,7 +16566,7 @@ SPECS: dict = {
     },
     "o3137": {
         "n": "해외선물옵션 차트 NTick 체결 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 시세",
@@ -17183,7 +17183,7 @@ SPECS: dict = {
     },
     "o3103": {
         "n": "해외선물차트 분봉 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 차트",
@@ -17219,7 +17219,7 @@ SPECS: dict = {
     },
     "o3108": {
         "n": "해외선물차트(일주월) 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 차트",
@@ -17264,7 +17264,7 @@ SPECS: dict = {
     },
     "o3117": {
         "n": "해외선물 차트 NTick 체결 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 차트",
@@ -17299,7 +17299,7 @@ SPECS: dict = {
     },
     "o3139": {
         "n": "해외선물옵션차트용NTick(고정형)-API용",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_futures",
         "cat": "해외선물",
         "grp": "[해외선물] 차트",
@@ -17962,7 +17962,7 @@ SPECS: dict = {
     },
     "g3101": {
         "n": "해외주식 API 현재가 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_stock",
         "cat": "해외주식",
         "grp": "[해외주식] 시세",
@@ -18009,7 +18009,7 @@ SPECS: dict = {
     },
     "g3102": {
         "n": "해외주식 API 시간대별",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_stock",
         "cat": "해외주식",
         "grp": "[해외주식] 시세",
@@ -18059,7 +18059,7 @@ SPECS: dict = {
     },
     "g3104": {
         "n": "해외주식 API 종목정보 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_stock",
         "cat": "해외주식",
         "grp": "[해외주식] 시세",
@@ -18114,7 +18114,7 @@ SPECS: dict = {
     },
     "g3106": {
         "n": "해외주식 API 현재가호가 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_stock",
         "cat": "해외주식",
         "grp": "[해외주식] 시세",
@@ -18216,7 +18216,7 @@ SPECS: dict = {
     },
     "g3190": {
         "n": "해외주식 API 마스터 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_stock",
         "cat": "해외주식",
         "grp": "[해외주식] 시세",
@@ -19217,7 +19217,7 @@ SPECS: dict = {
     },
     "g3103": {
         "n": "해외주식 API 일주월 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_stock",
         "cat": "해외주식",
         "grp": "[해외주식] 차트",
@@ -19258,7 +19258,7 @@ SPECS: dict = {
     },
     "g3202": {
         "n": "해외주식 API 차트NTICK 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_stock",
         "cat": "해외주식",
         "grp": "[해외주식] 차트",
@@ -19323,7 +19323,7 @@ SPECS: dict = {
     },
     "g3203": {
         "n": "해외주식 API 차트NMIN 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_stock",
         "cat": "해외주식",
         "grp": "[해외주식] 차트",
@@ -19386,7 +19386,7 @@ SPECS: dict = {
     },
     "g3204": {
         "n": "해외주식 API 차트일주월년별 조회",
-        "c": "realtime",
+        "c": "query",
         "m": "overseas_stock",
         "cat": "해외주식",
         "grp": "[해외주식] 차트",
