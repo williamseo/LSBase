@@ -911,7 +911,7 @@ SPECS: dict = {
     },
     "t1109": {
         "n": "시간외체결량",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 시세",
@@ -1043,7 +1043,7 @@ SPECS: dict = {
     },
     "t1305": {
         "n": "기간별주가",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 시세",
@@ -1309,7 +1309,7 @@ SPECS: dict = {
     },
     "t1422": {
         "n": "상/하한",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 시세",
@@ -1360,7 +1360,7 @@ SPECS: dict = {
     },
     "t1427": {
         "n": "상/하한가직전",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 시세",
@@ -1414,7 +1414,7 @@ SPECS: dict = {
     },
     "t1442": {
         "n": "신고/신저가",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 시세",
@@ -1621,7 +1621,7 @@ SPECS: dict = {
     },
     "t1488": {
         "n": "예상체결가등락율상위조회",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 시세",
@@ -2149,7 +2149,7 @@ SPECS: dict = {
     },
     "t3341": {
         "n": "재무순위종합",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 투자정보",
@@ -2309,7 +2309,7 @@ SPECS: dict = {
     },
     "t8428": {
         "n": "증시주변자금추이",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 투자정보",
@@ -2392,7 +2392,7 @@ SPECS: dict = {
     },
     "t1632": {
         "n": "시간대별프로그램매매추이",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 프로그램",
@@ -2436,7 +2436,7 @@ SPECS: dict = {
     },
     "t1633": {
         "n": "기간별프로그램매매추이",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 프로그램",
@@ -3962,7 +3962,7 @@ SPECS: dict = {
     },
     "t1960": {
         "n": "ELW등락율상위",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] ELW",
@@ -4017,7 +4017,7 @@ SPECS: dict = {
     },
     "t1961": {
         "n": "ELW거래량상위",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] ELW",
@@ -4137,7 +4137,7 @@ SPECS: dict = {
     },
     "t1966": {
         "n": "ELW거래대금상위",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] ELW",
@@ -5492,7 +5492,7 @@ SPECS: dict = {
     },
     "t1441": {
         "n": "등락율상위",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 상위종목",
@@ -5548,7 +5548,7 @@ SPECS: dict = {
     },
     "t1444": {
         "n": "시가총액상위",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 상위종목",
@@ -5587,7 +5587,7 @@ SPECS: dict = {
     },
     "t1452": {
         "n": "거래량상위",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 상위종목",
@@ -5632,7 +5632,7 @@ SPECS: dict = {
     },
     "t1463": {
         "n": "거래대금상위",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 상위종목",
@@ -5681,7 +5681,7 @@ SPECS: dict = {
     },
     "t1466": {
         "n": "전일동시간대비거래급증",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 상위종목",
@@ -5731,7 +5731,7 @@ SPECS: dict = {
     },
     "t1481": {
         "n": "시간외등락율상위",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 상위종목",
@@ -5774,7 +5774,7 @@ SPECS: dict = {
     },
     "t1482": {
         "n": "시간외거래량상위",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 상위종목",
@@ -5813,7 +5813,7 @@ SPECS: dict = {
     },
     "t1489": {
         "n": "예상체결량상위조회",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 상위종목",
@@ -5856,7 +5856,7 @@ SPECS: dict = {
     },
     "t1492": {
         "n": "단일가예상등락율상위",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 상위종목",
@@ -6423,7 +6423,7 @@ SPECS: dict = {
     },
     "t1403": {
         "n": "신규상장종목조회",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 기타",
@@ -6466,7 +6466,7 @@ SPECS: dict = {
     },
     "t1411": {
         "n": "증거금율별종목조회",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 기타",
@@ -6545,7 +6545,7 @@ SPECS: dict = {
     },
     "t1921": {
         "n": "신용거래동향",
-        "c": "query",
+        "c": "continuous",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 기타",

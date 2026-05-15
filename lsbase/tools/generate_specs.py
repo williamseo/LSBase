@@ -64,11 +64,10 @@ def classify_tr(code: str, res_body: list, category: str, req_example: dict) -> 
     # 실시간: t나 C로 시작하지 않음 (token/revoke/o/g 제외)
     if not code.startswith("t") and not code.startswith("C"):
         return "realtime"
-    # 연속조회: 응답에 cts_ 또는 cont/contkey 필드 있음
+    # 연속조회: 응답에 cts_, idx, cont/contkey 중 하나라도 있음
     res_names = {p.get("name", "") for p in res_body}
-    cts_fields = {n for n in res_names if n.startswith("cts_")}
-    cont_fields = res_names & {"cont", "contkey", "cont_key"}
-    if cts_fields or cont_fields:
+    cont_indicators = {n for n in res_names if n.startswith("cts_") or n in ("idx", "cont", "contkey", "cont_key")}
+    if cont_indicators:
         return "continuous"
     return "query"
 
