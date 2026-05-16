@@ -2,10 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import io
+import json
 import logging
 from datetime import datetime as dt
 
-import numpy as np
 from flask import Flask, jsonify, render_template, request, send_file
 
 from lsbase import MarketClient
@@ -14,19 +14,6 @@ from .analyzer import analyze_stock
 from .data_fetcher import LSDataFetcher, rate_limited_scan
 
 logger = logging.getLogger(__name__)
-
-
-class _SafeEncoder(json.JSONEncoder):
-    def default(self, obj):
-        if isinstance(obj, (np.integer,)):
-            return int(obj)
-        if isinstance(obj, (np.floating,)):
-            return float(obj)
-        if isinstance(obj, (np.bool_,)):
-            return bool(obj)
-        if isinstance(obj, np.ndarray):
-            return obj.tolist()
-        return super().default(obj)
 
 
 UNIVERSE = {
