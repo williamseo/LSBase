@@ -6,18 +6,19 @@ import ast
 import os
 import pytest
 
-SAMPLE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+SAMPLE_DIR = os.path.join(BASE_DIR, 'samples')
 SAMPLES = [
-    f for f in os.listdir(SAMPLE_DIR)
+    os.path.join(SAMPLE_DIR, f)
+    for f in os.listdir(SAMPLE_DIR)
     if f.endswith('.py') and (f.startswith('sample_') or f.startswith('full_'))
 ]
-SAMPLES += ['searchtr.py']
+SAMPLES += [os.path.join(BASE_DIR, 'tools', 'searchtr.py')]
 
 
-@pytest.mark.parametrize('filename', SAMPLES)
-def test_sample_syntax(filename):
-    path = os.path.join(SAMPLE_DIR, filename)
-    if not os.path.exists(path):
-        pytest.skip(f'{filename} not found')
-    with open(path) as f:
+@pytest.mark.parametrize('filepath', SAMPLES)
+def test_sample_syntax(filepath):
+    if not os.path.exists(filepath):
+        pytest.skip(f'{filepath} not found')
+    with open(filepath) as f:
         ast.parse(f.read())

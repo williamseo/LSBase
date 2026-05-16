@@ -4,7 +4,7 @@ SpecRepository + TrSpec.continuation + continuous_query(spec=tr)의
 전체 파이프라인을 보여줍니다.
 
 실행:
-  python sample_continuous_demo.py
+  python -m samples.sample_continuous_demo
 """
 import asyncio
 from lsbase import MarketClient

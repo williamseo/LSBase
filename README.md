@@ -92,20 +92,20 @@ client.overseas_futures.get_quote("CL")        # 해외선물
 
 | 파일 | 설명 |
 |------|------|
-| `sample_get_price.py` | 주식 현재가 조회 |
-| `sample_get_balance.py` | 계좌 잔고 조회 |
-| `sample_get_top_stocks.py` | 시가총액 상위 조회 |
-| `sample_place_order.py` | 지정가 주문 |
-| `sample_high_value_stocks.py` | 거래대금 200억 이상 종목 |
-| `sample_continuous_demo.py` | 연속조회 + ContinuationSpec 데모 |
-| `sample_futures_quote.py` | 선물 현재가 |
-| `sample_overseas_quote_simple.py` | 해외주식 현재가 |
-| `sample_ofutures_quote.py` | 해외선물 현재가 |
-| `sample_realtime_monitor.py` | 실시간 체결 모니터링 |
-| `sample_foreign_trend.py` | 외인/기관 매매동향 |
-| `sample_new_high_low.py` | 신고가/신저가 연속조회 |
-| `sample_chart_nmin.py` | N분봉 차트 연속조회 |
-| `full_order_cycle.py` | 주문 전체 사이클 |
+| `samples/sample_get_price.py` | 주식 현재가 조회 |
+| `samples/sample_get_balance.py` | 계좌 잔고 조회 |
+| `samples/sample_get_top_stocks.py` | 시가총액 상위 조회 |
+| `samples/sample_place_order.py` | 지정가 주문 |
+| `samples/sample_high_value_stocks.py` | 거래대금 200억 이상 종목 |
+| `samples/sample_continuous_demo.py` | 연속조회 + ContinuationSpec 데모 |
+| `samples/sample_futures_quote.py` | 선물 현재가 |
+| `samples/sample_overseas_quote_simple.py` | 해외주식 현재가 |
+| `samples/sample_ofutures_quote.py` | 해외선물 현재가 |
+| `samples/sample_realtime_monitor.py` | 실시간 체결 모니터링 |
+| `samples/sample_foreign_trend.py` | 외인/기관 매매동향 |
+| `samples/sample_new_high_low.py` | 신고가/신저가 연속조회 |
+| `samples/sample_chart_nmin.py` | N분봉 차트 연속조회 |
+| `samples/full_order_cycle.py` | 주문 전체 사이클 |
 
 ## API 호출 속도 제한
 
@@ -118,8 +118,8 @@ client = MarketClient(api_call_rate=10.0, api_burst=10)
 ## TR 검색 도구
 
 ```bash
-python searchtr.py t1102            # TR 상세 조회
-python searchtr.py --search 현재가    # TR 검색
+python tools/searchtr.py t1102            # TR 상세 조회
+python tools/searchtr.py --search 현재가    # TR 검색
 ```
 
 ## 테스트
@@ -152,13 +152,18 @@ LSBase/
 │   │   ├── generate_specs.py  # 명세 생성기
 │   │   └── update_api_specs.py# API 스크레이퍼
 │   └── _tr_specs.py           # (자동 생성) 364개 TR 명세
+├── samples/
+│   ├── sample_get_price.py    # 주식 현재가 조회
+│   ├── sample_place_order.py  # 지정가 주문
+│   ├── full_order_cycle.py    # 주문 전체 사이클
+│   └── ...                    # 추가 샘플 (18개)
 ├── tests/
 │   ├── test_spec_models.py    # TrSpec 단위 테스트
 │   ├── test_throttler.py      # Throttler 테스트
 │   └── test_samples.py        # 샘플 문법 검증
 ├── tools/
+│   ├── searchtr.py            # TR 검색 도구
 │   └── validate_spec.py       # 명세 대응 검증 도구
-├── sample_*.py                # 사용 예제
 └── docs/
     └── ROADMAP.md             # 개발 로드맵
 ```
