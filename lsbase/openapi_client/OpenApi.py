@@ -1,12 +1,10 @@
-﻿import aiohttp, asyncio, json, time
+import aiohttp, asyncio, json, time
 from .tr_code_to_path import tr_code_to_path
 from .code_realtime_account import code_realtime_account
+from ..core.resilience import (
+    ConnectionManager, ConnectionState, ExponentialBackoff, ReconnectionWorker,
+)
 
-# BASE_URL = "https://openapi.ebestsec.co.kr:8080"
-# WSS_URL_REAL = "wss://openapi.ebestsec.co.kr:9443/websocket"
-# WSS_URL_SIMULATION = "wss://openapi.ebestsec.co.kr:29443/websocket"
-
-# 2024-06-01. 이베스트증권에서 LS증권으로 변경됨.
 BASE_URL = "https://openapi.ls-sec.co.kr:8080"
 WSS_URL_REAL = "wss://openapi.ls-sec.co.kr:9443/websocket"
 WSS_URL_SIMULATION = "wss://openapi.ls-sec.co.kr:29443/websocket"
@@ -15,29 +13,21 @@ import warnings
 
 
 class ResponseValue:
-    def __init__(
-        self,
-        path: str,
-        tr_cd: str,
-        tr_cont: str,
-        tr_cont_key: str,
-        response_text: str,
-    ) -> None:
+    def __init__(self, path, tr_cd, tr_cont, tr_cont_key, response_text):
         self.path = path
         self.tr_cd = tr_cd
         self.tr_cont = tr_cont
         self.tr_cont_key = tr_cont_key
         self.body = json.loads(response_text)
         self.response_text = response_text
-        # additional variables
         self.in_tr_cont = str()
         self.in_tr_cont_key = str()
         self.request_text = str()
         self.request_time = 0.0
         self.elapsed_ms = 0.0
 
-class OpenApi:
 
+class OpenApi:
     class _event_signal:
         class _slot:
             def __init__(self, func):
@@ -46,21 +36,14 @@ class OpenApi:
             def __eq__(self, other):
                 return self.func == other
         def __init__(self):
-            self.__slots: list[self._slot] = []
+            self.__slots = []
         def connect(self, func):
-            # check callable
-            if not hasattr(func, "__call__") :
+            if not hasattr(func, "__call__"):
                 raise ValueError("slot must be callable")
-            # check exist
-            exist_slot = next((s for s in self.__slots if s.func == func), None)
-            if exist_slot:
-                return
-            # add slot
-            self.__slots.append(self._slot(func))
+            if not any(s.func == func for s in self.__slots):
+                self.__slots.append(self._slot(func))
         def disconnect(self, func):
-            exist_slot = next((s for s in self.__slots if s.func == func), None)
-            if exist_slot:
-                self.__slots.remove(exist_slot)
+            self.__slots = [s for s in self.__slots if s.func != func]
         def disconnect_all(self):
             self.__slots.clear()
         async def emit_signal(self, *args):
@@ -70,218 +53,207 @@ class OpenApi:
                 else:
                     slot.func(*args)
 
-    def __init__(self):
-        super().__init__()
-        
+    def __init__(self, auto_reconnect: bool = True):
         self._access_token = ""
         self._http = None
         self._websocket = None
-        self._connected:bool = False
-        self._is_simulation:bool = False
-        self._last_message:str = ""
-        self._mac_address : str|None = None
+        self._connected = False
+        self._is_simulation = False
+        self._last_message = ""
+        self._mac_address = None
         self._last_respose_value = None
         self._ws_task = None
-    
-        # 이벤트 핸들러
+
+        self.connection = ConnectionManager()
+        self._reconnector = None
+        self._auto_reconnect = auto_reconnect
+
         self._on_message = self._event_signal()
         self._on_realtime = self._event_signal()
-        # self._on_message = lambda sender, msg: print(f"on_message: {msg}")
-        # self._on_realtime = lambda sender, trcode, key, realtimedata: print(f"on_realtime: {trcode}, {key}, {realtimedata}")
 
     @property
     def connected(self) -> bool:
-        """로그인 연결상태.
-        True: 연결됨, False: 연결안됨
-
-        A readonly property.
-        """
         return self._connected
-    
+
     @property
     def is_simulation(self) -> bool:
-        """서버모드
-        True: 모의투자, False: 실투자
-
-        A readonly property.
-        """
         return self._is_simulation
 
     @property
     def last_message(self) -> str:
-        """last error message.
-
-        A readonly property.
-        """
         return self._last_message
 
     @property
     def mac_address(self) -> str:
-        """법인인 경우 필수 세팅"""
         return self._mac_address
 
     @mac_address.setter
-    def mac_address(self, value:str) : self._mac_address = value
+    def mac_address(self, value):
+        self._mac_address = value
 
     @property
-    def on_message(self) :
-        """메시지 수신 이벤트 핸들러
-        on_message(sender:OpenApi, msg:str)
-        """
+    def on_message(self):
         return self._on_message
-    
+
     @on_message.setter
-    def on_message(self, slot) :
-        if not hasattr(slot, "__call__") :
+    def on_message(self, slot):
+        if not hasattr(slot, "__call__"):
             raise ValueError("slot must be callable")
-        warnings.warn("setter is deprecated. use on_message.connect({}).".format(slot.__name__),
-                      category=DeprecationWarning,
-                      stacklevel=2)
+        warnings.warn("use .connect() instead", DeprecationWarning, stacklevel=2)
         self._on_message.connect(slot)
 
     @property
-    def on_realtime(self) :
-        """실시간 데이터 수신 이벤트 핸들러
-        on_realtime(sender:OpenApi, trcode:str, key:str, realtimedata:dict)
-        """
+    def on_realtime(self):
         return self._on_realtime
-    
-    @on_realtime.setter
-    def on_realtime(self, slot) :
-        if not hasattr(slot, "__call__") :
-            raise ValueError("slot must be callable")
-        warnings.warn("setter is deprecated. use on_realtime.connect({}).".format(slot.__name__),
-                      category=DeprecationWarning,
-                      stacklevel=2)
-        self._on_realtime.connect(slot)
-    
-    async def close(self) -> None:
-        """연결 종료"""
-        self._connected = False
 
+    @on_realtime.setter
+    def on_realtime(self, slot):
+        if not hasattr(slot, "__call__"):
+            raise ValueError("slot must be callable")
+        warnings.warn("use .connect() instead", DeprecationWarning, stacklevel=2)
+        self._on_realtime.connect(slot)
+
+    async def close(self):
+        if self._reconnector:
+            await self._reconnector.stop()
+        self.connection.set_state(ConnectionState.CLOSING)
+        self._connected = False
         if self._ws_task:
             self._ws_task.cancel()
             try:
                 await self._ws_task
             except asyncio.CancelledError:
                 pass
-
         if self._websocket and not self._websocket.closed:
             await self._websocket.close()
         if self._http and not self._http.closed:
             await self._http.close()
+        self.connection.set_state(ConnectionState.DISCONNECTED)
+        self.connection.clear_subscriptions()
 
-    async def login(self, appkey:str, appsecretkey:str) -> bool:
-        '''
-        로그인 요청
-        appkey: 앱키
-        appsecretkey: 앱시크릿키
-        return: True: 성공, False: 실패, 실패시 last_message에 실패사유가 저장됨
-        '''
-        if self._connected :
-            self._last_message = "aleady connected"
+    async def login(self, appkey, appsecretkey) -> bool:
+        if self._connected:
+            self._last_message = "already connected"
             return True
-        
-        if appkey == "" or appsecretkey == "":
+        if not appkey or not appsecretkey:
             self._last_message = "appkey or appsecretkey is empty"
             return False
-    
-        # 토큰 가져오기
-        timeout = aiohttp.ClientTimeout(total=10) # 10초 타임아웃
+
+        self.connection.set_state(ConnectionState.CONNECTING)
+
+        timeout = aiohttp.ClientTimeout(total=10)
         httpclient = aiohttp.ClientSession(timeout=timeout)
-        token_response = await httpclient.post(BASE_URL + "/oauth2/token"
-                    , data={'grant_type': 'client_credentials', 'appkey': appkey, 'appsecretkey': appsecretkey, 'scope': 'oob'}
-                    )
+        token_response = await httpclient.post(
+            BASE_URL + "/oauth2/token",
+            data={'grant_type': 'client_credentials', 'appkey': appkey, 'appsecretkey': appsecretkey, 'scope': 'oob'},
+        )
         if token_response.status != 200:
             await httpclient.close()
             self._last_message = "Failed to retrieve authentication key."
+            self.connection.set_state(ConnectionState.DISCONNECTED)
             return False
-    
-        # 인증성공
+
         token = (await token_response.json())['access_token']
         httpclient.headers["Authorization"] = f"Bearer {token}"
         httpclient.headers["Content-Type"] = "application/json; charset=UTF-8"
         self._access_token = token
         self._http = httpclient
-        self._connected = True
-        
-        # 모의투자인지 실투자인지 구분한다.
-        FOCCQ33600 = dict()
-        FOCCQ33600['FOCCQ33600InBlock1'] = {}
-        
+
+        FOCCQ33600 = {'FOCCQ33600InBlock1': {}}
         response = await self.request("FOCCQ33600", FOCCQ33600)
-        if not response :
+        if not response:
             self._connected = False
             self._last_message = "Failed to require FOCCQ33600"
             await httpclient.close()
+            self.connection.set_state(ConnectionState.DISCONNECTED)
             return False
-    
-        rsp_msg:str = response.body["rsp_msg"]
-        if rsp_msg.__contains__("모의투자"):
+
+        rsp_msg = response.body["rsp_msg"]
+        if "모의투자" in rsp_msg:
             self._is_simulation = True
 
-        # 웹소켓 연결
         self._connected = False
         try:
-            websocket = await  httpclient.ws_connect(WSS_URL_SIMULATION if self._is_simulation else WSS_URL_REAL)
+            ws_url = WSS_URL_SIMULATION if self._is_simulation else WSS_URL_REAL
+            websocket = await httpclient.ws_connect(ws_url)
             self._connected = not websocket.closed
         except Exception as e:
             self._last_message = str(e)
-    
+
         if not self._connected:
             await httpclient.close()
-            self._last_message = "websocket connection failed."
+            self.connection.set_state(ConnectionState.DISCONNECTED)
             return False
-    
+
         self._websocket = websocket
         self._ws_task = asyncio.create_task(self._websocket_listen())
+        self.connection.set_state(ConnectionState.CONNECTED)
+
+        if self._auto_reconnect and not self._reconnector:
+            backoff = ExponentialBackoff(initial_delay=2.0, max_delay=30.0)
+            self._reconnector = ReconnectionWorker(
+                connection_manager=self.connection,
+                backoff=backoff,
+                on_reconnect=self._reconnect,
+                on_resubscribe=self._resubscribe,
+            )
+            await self._reconnector.start()
+
         return True
 
-    async def request(self, tr_cd:str, data:dict|str
-                             ,*
-                             , path:str=None
-                             , tr_cont:str="N"
-                             , tr_cont_key:str="0"
-                             ) -> ResponseValue | None:
-        '''
-        TR데이터 요청
-        tr_cd: TR코드
-        data: 데이터
-        return: 성공시 ResponseValue, 실패시 None, 실패시 last_message에 실패사유가 저장됨
-        '''
+    async def _reconnect(self) -> bool:
+        try:
+            self._connected = False
+            if self._websocket and not self._websocket.closed:
+                await self._websocket.close()
+            ws_url = WSS_URL_SIMULATION if self._is_simulation else WSS_URL_REAL
+            websocket = await self._http.ws_connect(ws_url)
+            self._websocket = websocket
+            self._connected = not websocket.closed
+            if self._connected:
+                self._ws_task = asyncio.create_task(self._websocket_listen())
+                return True
+        except Exception as e:
+            self._last_message = str(e)
+        return False
+
+    async def _resubscribe(self, subscriptions: list[tuple[str, str]]):
+        for tr_code, key in subscriptions:
+            try:
+                tr_type = "1" if code_realtime_account.__contains__(tr_code) else "3"
+                data = f'{{"header":{{"token":"{self._access_token}","tr_type":"{tr_type}"}},"body":{{"tr_cd":"{tr_code}","tr_key":"{key}"}}}}'
+                await self._websocket.send_str(data)
+                await asyncio.sleep(0.05)
+            except Exception as e:
+                self._last_message = str(e)
+
+    async def request(self, tr_cd, data, *, path=None, tr_cont="N", tr_cont_key="0"):
         self._last_message = ""
         self._last_respose_value = None
         if not self._connected:
             self._last_message = "Not connected"
             return None
-
         if not path:
-            if not tr_code_to_path.__contains__(tr_cd):
+            if tr_cd not in tr_code_to_path:
                 self._last_message = "Not supported tr code"
                 return None
             path = tr_code_to_path[tr_cd]
-    
-        headers = dict()
-        headers["tr_cd"] = tr_cd
-        headers["tr_cont"] = tr_cont
-        headers["tr_cont_key"] = tr_cont_key
+
+        headers = {"tr_cd": tr_cd, "tr_cont": tr_cont, "tr_cont_key": tr_cont_key}
         if self._mac_address:
             headers["mac_address"] = self._mac_address
-        
+
         try:
-            if isinstance(data, str):
-                request_text = data
-            else:
-                request_text = json.dumps(data)
+            request_text = json.dumps(data) if not isinstance(data, str) else data
             request_time = time.time()
             start_time = time.perf_counter_ns()
             response = await self._http.post(BASE_URL + path, headers=headers, data=request_text)
             if response.status != 200:
-                self._last_message = await response.json()
+                self._last_message = str(await response.json())
                 return None
             response_text = await response.text()
             elapsed_ms = (time.perf_counter_ns() - start_time) / 1000000
-            result = ResponseValue(path, tr_cd, response.headers["tr_cont"], response.headers["tr_cont_key"], response_text)
+            result = ResponseValue(path, tr_cd, response.headers.get("tr_cont", "N"), response.headers.get("tr_cont_key", "0"), response_text)
             result.in_tr_cont = tr_cont
             result.in_tr_cont_key = tr_cont_key
             result.request_text = request_text
@@ -289,64 +261,71 @@ class OpenApi:
             result.elapsed_ms = elapsed_ms
             self._last_respose_value = result
             return result
+        except aiohttp.ClientError as e:
+            self._last_message = str(e)
+            if self._auto_reconnect and self._reconnector:
+                self.connection.set_state(ConnectionState.DISCONNECTED)
+                self._reconnector.trigger()
         except Exception as e:
             self._last_message = str(e)
-
         return None
 
-    def add_realtime(self, tr_cd:str, tr_key:str) :
-        """실시간 데이터 요청
-        tr_cd: TR코드
-        tr_key: TR키/종목코드
-        """
-        return self._realtime_request(tr_cd , tr_key, "1" if code_realtime_account.__contains__(tr_cd) else "3")
+    def add_realtime(self, tr_cd, tr_key):
+        self.connection.add_subscription(tr_cd, tr_key)
+        return self._realtime_request(tr_cd, tr_key, "1" if code_realtime_account.__contains__(tr_cd) else "3")
 
-    def remove_realtime(self, tr_cd:str, tr_key:str) :
-        """실시간 데이터 중지
-        tr_cd: TR코드
-        tr_key: TR키/종목코드
-        """
+    def remove_realtime(self, tr_cd, tr_key):
+        self.connection.remove_subscription(tr_cd, tr_key)
         return self._realtime_request(tr_cd, tr_key, "2" if code_realtime_account.__contains__(tr_cd) else "4")
 
     async def _websocket_listen(self):
-        async for msg in self._websocket:
-            if msg.type == aiohttp.WSMsgType.TEXT:
-                try:
-                    jsondata = json.loads(msg.data)
-                except Exception as e:
-                    self._last_message = str(e)
-                    await self._inner_on_mesage(f"websocket exception. {e}")
-                    continue
-                header = jsondata.get("header", None)
-                if header != None:
-                    tr_cd = header.get("tr_cd", None)
-                    rsp_msg = header.get("rsp_msg", None)
-                    if rsp_msg != None:
-                        self._last_message = ""
-                        tr_type = header.get("tr_type", None)
-                        await self._inner_on_mesage(f"{tr_cd}({tr_type}): {rsp_msg}")
-                    body = jsondata.get("body", None)
-                    tr_key = header.get("tr_key", None)
-                    if body != None:
-                        await self._inner_on_realtime(tr_cd, tr_key, body)
-            elif msg.type == aiohttp.WSMsgType.CLOSED:
-                self._last_message = f"websocket closed: {msg}"
-                await self._inner_on_mesage(f"websocket closed. {msg}")
-                break
-            elif msg.type == aiohttp.WSMsgType.ERROR:
-                self._last_message = f"websocket error: {msg}"
-                await self._inner_on_mesage(f"websocket error. {msg}")
+        try:
+            async for msg in self._websocket:
+                if msg.type == aiohttp.WSMsgType.TEXT:
+                    try:
+                        jsondata = json.loads(msg.data)
+                    except Exception as e:
+                        self._last_message = str(e)
+                        await self._inner_on_mesage(f"websocket exception. {e}")
+                        continue
+                    header = jsondata.get("header")
+                    if header:
+                        tr_cd = header.get("tr_cd")
+                        rsp_msg = header.get("rsp_msg")
+                        if rsp_msg:
+                            self._last_message = ""
+                            tr_type = header.get("tr_type")
+                            await self._inner_on_mesage(f"{tr_cd}({tr_type}): {rsp_msg}")
+                        body = jsondata.get("body")
+                        tr_key = header.get("tr_key")
+                        if body is not None:
+                            self.connection.record_message(tr_cd, tr_key)
+                            await self._inner_on_realtime(tr_cd, tr_key, body)
+                elif msg.type == aiohttp.WSMsgType.CLOSED:
+                    self._last_message = f"websocket closed"
+                    await self._inner_on_mesage(f"websocket closed")
+                    break
+                elif msg.type == aiohttp.WSMsgType.ERROR:
+                    self._last_message = f"websocket error: {msg}"
+                    await self._inner_on_mesage(f"websocket error")
+        except asyncio.CancelledError:
+            pass
+        finally:
+            self._connected = False
+            self.connection.set_state(ConnectionState.DISCONNECTED)
+            if self._auto_reconnect and self._reconnector:
+                self._reconnector.trigger()
 
-    async def _realtime_request(self, tr_cd:str, tr_key:str, tr_type:str) -> bool:
+    def _realtime_request(self, tr_cd, tr_key, tr_type) -> bool:
         if not self._connected:
             self._last_message = "Not connected"
             return False
-        data = f"{{\"header\":{{\"token\":\"{self._access_token}\",\"tr_type\":\"{tr_type}\"}},\"body\":{{\"tr_cd\":\"{tr_cd}\",\"tr_key\":\"{tr_key}\"}}}}"
-        await self._websocket.send_str(data)
+        data = f'{{"header":{{"token":"{self._access_token}","tr_type":"{tr_type}"}},"body":{{"tr_cd":"{tr_cd}","tr_key":"{tr_key}"}}}}'
+        asyncio.ensure_future(self._websocket.send_str(data))
         return True
 
-    async def _inner_on_mesage(self, msg:str):
+    async def _inner_on_mesage(self, msg):
         await self._on_message.emit_signal(self, msg)
 
-    async def _inner_on_realtime(self, trcode:str, key:str, realtimedata):
+    async def _inner_on_realtime(self, trcode, key, realtimedata):
         await self._on_realtime.emit_signal(self, trcode, key, realtimedata)
