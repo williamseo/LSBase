@@ -74,7 +74,7 @@ def get_client():
         if not ok:
             raise RuntimeError(f"LS증권 API 연결 실패: {_client._open_api.last_message}")
         _fetcher = LSDataFetcher(_client)
-        logger.info("MarketClient 연결 완료 (rate=2/s, burst=3)")
+        logger.info("MarketClient 연결 완료 (rate=1/s, burst=1)")
     return _client, _fetcher
 
 
