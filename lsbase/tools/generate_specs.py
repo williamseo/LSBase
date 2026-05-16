@@ -177,6 +177,40 @@ def fmt_bool(v: bool) -> str:
     return "True" if v else "False"
 
 
+def _normalize_realtime_blocks(req_blocks: list[dict], tr_class: str) -> tuple[list[dict], str]:
+    if tr_class != "realtime":
+        return req_blocks, tr_class
+
+    has_tr_cd_tr_key = False
+    for b in req_blocks:
+        field_names = {f["n"] for f in b["fields"]}
+        if "tr_cd" in field_names and "tr_key" in field_names:
+            has_tr_cd_tr_key = True
+            break
+
+    if not has_tr_cd_tr_key:
+        return req_blocks, "query"
+
+    normalized = []
+    for b in req_blocks:
+        new_fields = []
+        for f in b["fields"]:
+            if f["n"] == "tr_cd":
+                continue
+            if f["n"] == "tr_key":
+                new_fields.append({
+                    "n": "shcode",
+                    "k": "단축코드",
+                    "t": "str",
+                    "l": "8",
+                    "r": True,
+                })
+            else:
+                new_fields.append(f)
+        normalized.append({"name": b["name"], "fields": new_fields, "is_repeating": b["is_repeating"]})
+    return normalized, tr_class
+
+
 def main():
     print(f"Specs 파일 읽는 중: {SPECS_PATH}")
     with open(SPECS_PATH, "r", encoding="utf-8") as f:
@@ -209,6 +243,8 @@ def main():
 
                 req_blocks = parse_blocks(tr.get("request_body", []), "InBlock", False)
                 res_blocks = parse_blocks(tr.get("response_body", []), "OutBlock", True)
+
+                req_blocks, tr_class = _normalize_realtime_blocks(req_blocks, tr_class)
 
                 continuation = detect_continuation(
                     code,

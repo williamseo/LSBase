@@ -534,8 +534,7 @@ SPECS: dict = {
         "grp": "[업종] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "3", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -7414,7 +7413,7 @@ SPECS: dict = {
     },
     "FOCCQ33600": {
         "n": "주식계좌 기간별수익률 상세",
-        "c": "realtime",
+        "c": "query",
         "m": "stock",
         "cat": "주식",
         "grp": "[주식] 계좌",
@@ -7915,8 +7914,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8003,8 +8001,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8066,8 +8063,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8129,8 +8125,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8172,8 +8167,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8215,8 +8209,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "6", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8242,8 +8235,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8313,8 +8305,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8338,8 +8329,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8409,8 +8399,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8434,8 +8423,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8467,8 +8455,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8511,8 +8498,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8611,8 +8597,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8657,8 +8642,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8707,8 +8691,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8812,8 +8795,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8834,8 +8816,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8934,8 +8915,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -8984,8 +8964,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9089,8 +9068,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9111,8 +9089,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9157,8 +9134,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9187,8 +9163,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9319,8 +9294,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9468,8 +9442,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9485,8 +9458,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9502,8 +9474,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9519,8 +9490,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9557,8 +9527,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9594,8 +9563,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9633,8 +9601,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9671,8 +9638,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "6", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9698,8 +9664,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9726,8 +9691,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9757,8 +9721,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9788,8 +9751,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9823,8 +9785,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9848,8 +9809,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -9933,8 +9893,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10009,8 +9968,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10031,8 +9989,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10079,8 +10036,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10109,8 +10065,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10139,8 +10094,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10185,8 +10139,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10257,8 +10210,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10280,8 +10232,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "110", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10312,8 +10263,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10340,8 +10290,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": True},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10443,8 +10392,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": False},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": True},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10494,8 +10442,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "2", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10600,8 +10547,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "4", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10706,8 +10652,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "4", "r": True},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10737,8 +10682,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": True},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10784,8 +10728,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10906,8 +10849,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10929,8 +10871,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": True},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -10961,8 +10902,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -11012,8 +10952,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": True},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -11115,8 +11054,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "4", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -11221,8 +11159,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "4", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -11252,8 +11189,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "2", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -11357,8 +11293,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "10", "r": True},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -11390,8 +11325,7 @@ SPECS: dict = {
         "grp": "[주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "사용자구분키", "t": "str", "l": "11", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -14147,7 +14081,7 @@ SPECS: dict = {
     },
     "FOCCQ33700": {
         "n": "선물옵션 기간별 계좌 수익률 현황",
-        "c": "realtime",
+        "c": "query",
         "m": "futures_options",
         "cat": "선물/옵션",
         "grp": "[선물/옵션] 계좌",
@@ -14582,7 +14516,7 @@ SPECS: dict = {
     },
     "MMDAQ91200": {
         "n": "파생상품증거금율조회",
-        "c": "realtime",
+        "c": "query",
         "m": "futures_options",
         "cat": "선물/옵션",
         "grp": "[선물/옵션] 기타",
@@ -14693,8 +14627,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -14741,8 +14674,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -14765,8 +14697,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -14822,8 +14753,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -14846,8 +14776,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -14863,8 +14792,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -14912,8 +14840,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -14936,8 +14863,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15023,8 +14949,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15047,8 +14972,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15064,8 +14988,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15112,8 +15035,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15136,8 +15058,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15193,8 +15114,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15229,8 +15149,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15253,8 +15172,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15279,8 +15197,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15305,8 +15222,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15331,8 +15247,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15357,8 +15272,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15409,8 +15323,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15594,8 +15507,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15651,8 +15563,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15722,8 +15633,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15746,8 +15656,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15770,8 +15679,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15796,8 +15704,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "5", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -15826,8 +15733,7 @@ SPECS: dict = {
         "grp": "[선물/옵션] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "5", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -17342,8 +17248,7 @@ SPECS: dict = {
         "grp": "[해외선물] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -17379,8 +17284,7 @@ SPECS: dict = {
         "grp": "[해외선물] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -17434,8 +17338,7 @@ SPECS: dict = {
         "grp": "[해외선물] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -17471,8 +17374,7 @@ SPECS: dict = {
         "grp": "[해외선물] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -17526,8 +17428,7 @@ SPECS: dict = {
         "grp": "[해외선물] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -17568,8 +17469,7 @@ SPECS: dict = {
         "grp": "[해외선물] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -17612,8 +17512,7 @@ SPECS: dict = {
         "grp": "[해외선물] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -18287,8 +18186,7 @@ SPECS: dict = {
         "grp": "[해외주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -18394,8 +18292,7 @@ SPECS: dict = {
         "grp": "[해외주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -18521,8 +18418,7 @@ SPECS: dict = {
         "grp": "[해외주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -18648,8 +18544,7 @@ SPECS: dict = {
         "grp": "[해외주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -18775,8 +18670,7 @@ SPECS: dict = {
         "grp": "[해외주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -18897,8 +18791,7 @@ SPECS: dict = {
         "grp": "[해외주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "18", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -18983,8 +18876,7 @@ SPECS: dict = {
         "grp": "[해외주식] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "18", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -19482,8 +19374,7 @@ SPECS: dict = {
         "grp": "[기타] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -19503,8 +19394,7 @@ SPECS: dict = {
         "grp": "[기타] 실시간 시세",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "8", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -19529,8 +19419,7 @@ SPECS: dict = {
         "grp": "[실시간 시세 투자정보] 투자정보",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "단축코드", "t": "str", "l": "3", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [
@@ -19665,8 +19554,7 @@ SPECS: dict = {
         "grp": "[실시간 시세 투자정보] 투자정보",
         "rb": [
             {"n": "InBlock", "f": [
-                {"n": "tr_cd", "k": "거래 CD", "t": "str", "l": "3", "r": True},
-                {"n": "tr_key", "k": "심볼코드", "t": "str", "l": "16", "r": False},
+                {"n": "shcode", "k": "단축코드", "t": "str", "l": "8", "r": True},
             ], "r": False},
         ],
         "pb": [

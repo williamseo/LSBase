@@ -28,7 +28,8 @@ def main():
             print(f"😭 TR '{tr_code}'을(를) 찾을 수 없습니다.")
             continue
 
-        print(f"✅ [{spec.code}] {spec.name}")
+        is_ws = " (WebSocket)" if spec.is_realtime else ""
+        print(f"✅ [{spec.code}] {spec.name}{is_ws}")
         print(f"   분류: {spec.tr_class.value}, 시장: {spec.market.value}")
         print(f"   카테고리: {spec.category} > {spec.group}")
 
@@ -48,6 +49,10 @@ def main():
                     print(f"      {f.name:20s} {f.korean_name:15s} ({f.python_type.__name__:5s})")
                 if len(block.fields) > 10:
                     print(f"      ... 외 {len(block.fields) - 10}개 필드")
+
+        if spec.is_realtime and spec.request_blocks:
+            print(f"\n  💡 실시간 구독: MarketClient.subscribe_realtime('{spec.code}', '<shcode>')")
+            print(f"     예: await client.stock.subscribe_realtime('005930', RealtimeType.EXECUTION)")
 
         if spec.continuation:
             c = spec.continuation
