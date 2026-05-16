@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import logging
 from datetime import datetime, timedelta
 
@@ -7,30 +8,47 @@ import pandas as pd
 
 logger = logging.getLogger(__name__)
 
+EXCHGUBUN = "K"
+
 
 class LSDataFetcher:
-    """LSBase MarketClient를 통해 데이터를 수집하는 어댑터.
-
-    LeadingStock 분석 엔진에 pandas DataFrame 형태로 데이터를 공급한다.
-    """
-
     def __init__(self, client):
         self._client = client
 
     async def get_stock_ohlcv(self, ticker: str, days: int = 130) -> pd.DataFrame | None:
-        prices = await self._client.stock.get_historical_data(ticker, "day", count=days)
-        if not prices:
+        tr = self._client._repo["t1305"]
+        now = datetime.now()
+        req = tr.build_request({
+            "shcode": ticker,
+            "dwmcode": "1",
+            "date": now.strftime("%Y%m%d"),
+            "idx": "0",
+            "cnt": str(days),
+            "exchgubun": EXCHGUBUN,
+        })
+        all_items = []
+        try:
+            async for item in self._client._api.continuous_query(tr.code, req, spec=tr):
+                all_items.append(item)
+        except Exception as e:
+            logger.warning("OHLCV fetch failed (%s): %s", ticker, e)
+            return None
+        if not all_items:
             return None
         rows = []
-        for p in prices:
+        for item in all_items:
+            try:
+                dt = datetime.strptime(item.get("date", ""), "%Y%m%d")
+            except (ValueError, TypeError):
+                continue
             rows.append({
-                "Date": datetime.strptime(p.date, "%Y%m%d"),
-                "시가": p.open,
-                "고가": p.high,
-                "저가": p.low,
-                "종가": p.close,
-                "거래량": p.volume,
-                "거래대금": p.value,
+                "Date": dt,
+                "시가": int(item.get("open", 0)),
+                "고가": int(item.get("high", 0)),
+                "저가": int(item.get("low", 0)),
+                "종가": int(item.get("close", 0)),
+                "거래량": int(item.get("volume", 0)),
+                "거래대금": int(item.get("value", 0)),
             })
         df = pd.DataFrame(rows)
         df = df.set_index("Date").sort_index()
@@ -85,6 +103,7 @@ class LSDataFetcher:
             "gubun": "0",
             "fromdt": start_dt,
             "todt": end_dt,
+            "exchgubun": EXCHGUBUN,
         })
         try:
             response = await self._client._api.query(tr.code, req)
@@ -113,8 +132,32 @@ class LSDataFetcher:
         return df.tail(days)
 
     async def get_stock_name(self, ticker: str) -> str:
+        tr = self._client._repo["t1102"]
+        req = tr.build_request({
+            "shcode": ticker,
+            "exchgubun": EXCHGUBUN,
+        })
         try:
-            quote = await self._client.stock.get_quote(ticker)
-            return quote.symbol_name
-        except Exception:
+            response = await self._client._api.query(tr.code, req)
+            parsed = tr.parse_response(response.body)
+            data = parsed.get("t1102OutBlock", {})
+            return data.get("hname", ticker)
+        except Exception as e:
+            logger.warning("Stock name fetch failed (%s): %s", ticker, e)
             return ticker
+
+
+async def rate_limited_scan(fetcher, tickers, analyze_func):
+    results = []
+    total = len(tickers)
+    for i, (ticker, (name, market)) in enumerate(tickers):
+        try:
+            r = await analyze_func(fetcher, ticker, market)
+            if "error" not in r:
+                results.append(r)
+        except Exception as e:
+            logger.warning("Scan %s failed: %s", ticker, e)
+        if i % 3 == 0:
+            await asyncio.sleep(0.5)
+    results.sort(key=lambda x: x["total_score"], reverse=True)
+    return results

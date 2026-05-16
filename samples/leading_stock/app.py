@@ -14,7 +14,7 @@ from flask import Flask, jsonify, render_template, request, send_file
 from lsbase import MarketClient
 
 from .analyzer import analyze_stock
-from .data_fetcher import LSDataFetcher
+from .data_fetcher import LSDataFetcher, rate_limited_scan
 
 logger = logging.getLogger(__name__)
 
@@ -114,19 +114,7 @@ def scan():
             if not await client.connect():
                 return {"error": "LS증권 API 연결 실패"}
             fetcher = LSDataFetcher(client)
-            results = []
-            total = len(tickers)
-            for i, (ticker, (name, market)) in enumerate(tickers):
-                try:
-                    r = await analyze_stock(fetcher, ticker, market)
-                    if "error" not in r:
-                        results.append(r)
-                except Exception as e:
-                    logger.warning("Scan %s failed: %s", ticker, e)
-                if i % 5 == 0:
-                    logger.info("Scan progress: %d/%d", i + 1, total)
-            results.sort(key=lambda x: x["total_score"], reverse=True)
-            return results
+            return await rate_limited_scan(fetcher, tickers, analyze_stock)
         finally:
             await client.disconnect()
 
@@ -139,6 +127,9 @@ def scan():
 @app.route("/report")
 def report():
     limit = int(request.args.get("limit", 0))
+    tickers = list(UNIVERSE.items())
+    if limit > 0:
+        tickers = tickers[:limit]
 
     async def _run():
         client = MarketClient(monitor_market_state=False)
@@ -146,19 +137,7 @@ def report():
             if not await client.connect():
                 return {"error": "LS증권 API 연결 실패"}
             fetcher = LSDataFetcher(client)
-            results = []
-            tickers = list(UNIVERSE.items())
-            if limit > 0:
-                tickers = tickers[:limit]
-            for ticker, (name, market) in tickers:
-                try:
-                    r = await analyze_stock(fetcher, ticker, market)
-                    if "error" not in r:
-                        results.append(r)
-                except Exception as e:
-                    logger.warning("Report %s failed: %s", ticker, e)
-            results.sort(key=lambda x: x["total_score"], reverse=True)
-            return results
+            return await rate_limited_scan(fetcher, tickers, analyze_stock)
         finally:
             await client.disconnect()
 
@@ -199,16 +178,7 @@ def report_download():
             if not await client.connect():
                 return None
             fetcher = LSDataFetcher(client)
-            results = []
-            for ticker, (name, market) in UNIVERSE.items():
-                try:
-                    r = await analyze_stock(fetcher, ticker, market)
-                    if "error" not in r:
-                        results.append(r)
-                except Exception:
-                    pass
-            results.sort(key=lambda x: x["total_score"], reverse=True)
-            return results
+            return await rate_limited_scan(fetcher, list(UNIVERSE.items()), analyze_stock)
         finally:
             await client.disconnect()
 
