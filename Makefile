@@ -13,13 +13,13 @@ test: ## pytest 실행
 	$(PYTHON) -m pytest tests/ -v $(ARGS)
 
 specs: ## TR 명세 생성 (최초 1회)
-	$(PYTHON) lsbase/tools/generate_specs.py
+	PYTHONPATH=. $(PYTHON) lsbase/tools/generate_specs.py
 
 search: ## TR 검색: make search ARGS="t1102"  또는  make search ARGS="--search 현재가"
-	$(PYTHON) tools/searchtr.py $(ARGS)
+	PYTHONPATH=. $(PYTHON) tools/searchtr.py $(ARGS)
 
 validate: ## 실제 API 응답 vs TR 명세 검증: make validate ARGS="t1102"
-	$(PYTHON) tools/validate_spec.py $(ARGS)
+	PYTHONPATH=. $(PYTHON) tools/validate_spec.py $(ARGS)
 
 samples: ## 샘플 목록 출력
 	@echo "=== 샘플 파일 목록 (samples/) ==="
