@@ -190,7 +190,10 @@ class TrSpec(BaseModel):
         known = block.field_names()
         unknown = set(values.keys()) - known
         if unknown:
-            logger.warning("TR '%s': unknown fields ignored %s", self.code, unknown)
+            msg = f"TR '{self.code}': unknown fields {unknown}"
+            if strict:
+                raise ValueError(msg)
+            logger.warning(msg)
 
         result: dict[str, Any] = {}
         missing: list[str] = []
@@ -223,6 +226,14 @@ class TrSpec(BaseModel):
                         f"max {f.max_length} chars exceeded ({len(value)})"
                     )
 
+            if isinstance(value, int) and f.max_length:
+                digit_count = len(str(abs(value)))
+                if digit_count > f.max_length:
+                    raise ValueError(
+                        f"'{f.name}'({f.korean_name}): "
+                        f"max {f.max_length} digits exceeded ({digit_count})"
+                    )
+
             result[f.name] = value
 
         if missing:
@@ -245,31 +256,74 @@ class TrSpec(BaseModel):
         return value
 
     def parse_response(self, raw_body: dict[str, Any]) -> dict[str, Any]:
+        parsed, _ = self._parse_response_with_meta(raw_body)
+        return parsed
+
+    def parse_response_strict(self, raw_body: dict[str, Any]) -> dict[str, Any]:
+        """parse_response + unknown/missing 필드 경고 로깅."""
+        parsed, meta = self._parse_response_with_meta(raw_body)
+        if meta.get("unknown_fields"):
+            logger.warning(
+                "TR '%s': response has unknown fields %s",
+                self.code, meta["unknown_fields"],
+            )
+        if meta.get("missing_blocks"):
+            logger.warning(
+                "TR '%s': expected blocks missing %s",
+                self.code, meta["missing_blocks"],
+            )
+        return parsed
+
+    def _parse_response_with_meta(
+        self, raw_body: dict[str, Any],
+    ) -> tuple[dict[str, Any], dict[str, list]]:
         result: dict[str, Any] = {}
+        meta: dict[str, list] = {
+            "unknown_fields": [],
+            "missing_blocks": [],
+        }
+
+        known_block_names = {b.name for b in self.response_blocks}
+        actual_block_names = set(raw_body.keys()) - {"rsp_cd", "rsp_msg"}
+
         for block in self.response_blocks:
             block_data = raw_body.get(block.name)
             if block_data is None:
+                meta["missing_blocks"].append(block.name)
                 continue
 
             if block.is_repeating:
                 if isinstance(block_data, list):
                     parsed = []
                     for item in block_data:
-                        parsed.append(
-                            self._coerce_block(block, item)
-                            if isinstance(item, dict)
-                            else item
-                        )
+                        if isinstance(item, dict):
+                            unknown = set(item.keys()) - block.field_names()
+                            if unknown:
+                                meta["unknown_fields"].extend(
+                                    f"{block.name}.{k}" for k in unknown
+                                )
+                            parsed.append(self._coerce_block(block, item))
+                        else:
+                            parsed.append(item)
                     result[block.name] = parsed
                 elif isinstance(block_data, dict):
                     result[block.name] = self._coerce_block(block, block_data)
             else:
                 if isinstance(block_data, dict):
+                    unknown = set(block_data.keys()) - block.field_names()
+                    if unknown:
+                        meta["unknown_fields"].extend(
+                            f"{block.name}.{k}" for k in unknown
+                        )
                     result[block.name] = self._coerce_block(block, block_data)
                 else:
                     result[block.name] = block_data
 
-        return result
+        unknown_blocks = actual_block_names - known_block_names
+        if unknown_blocks:
+            meta["unknown_fields"].extend(f"block:{b}" for b in unknown_blocks)
+
+        return result, meta
 
     def parse_flat_response(self, data: dict[str, Any]) -> dict[str, Any]:
         """실시간 데이터 등 flat dict를 필드 타입에 맞게 변환."""
