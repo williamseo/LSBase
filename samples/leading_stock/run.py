@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 import logging
-import os
 import sys
 
 logging.basicConfig(
@@ -9,8 +8,6 @@ logging.basicConfig(
     format="%(asctime)s %(levelname)s %(name)s: %(message)s",
     datefmt="%H:%M:%S",
 )
-
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
 from .app import app
 
