@@ -21,8 +21,8 @@ search: ## TR 검색: make search ARGS="t1102"  또는  make search ARGS="--sear
 validate: ## 실제 API 응답 vs TR 명세 검증: make validate ARGS="t1102"
 	PYTHONPATH=. $(PYTHON) tools/validate_spec.py $(ARGS)
 
-leading: ## 주도주 분석 웹 실행 (http://localhost:5000)
-	PYTHONPATH=. $(PYTHON) -m samples.leading_stock.run
+leading: ## 주도주 분석 웹 실행: make leading (기본 5000), make leading ARGS="5001"
+	PYTHONPATH=. $(PYTHON) -m samples.leading_stock.run $(ARGS)
 
 samples: ## 샘플 목록 출력
 	@echo "=== 샘플 파일 목록 (samples/) ==="
