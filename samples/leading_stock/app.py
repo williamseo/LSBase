@@ -2,8 +2,9 @@ from __future__ import annotations
 
 import asyncio
 import io
-import json
 import logging
+import threading
+import time
 from datetime import datetime as dt
 
 from flask import Flask, jsonify, render_template, request, send_file
@@ -52,23 +53,31 @@ app = Flask(__name__)
 _client: MarketClient | None = None
 _fetcher: LSDataFetcher | None = None
 _loop: asyncio.AbstractEventLoop | None = None
+_loop_thread: threading.Thread | None = None
+
+_scan_cache: dict = {}
+SCAN_CACHE_TTL = 300
+
+
+def _start_loop():
+    global _loop, _loop_thread
+    if _loop is not None:
+        return
+    _loop = asyncio.new_event_loop()
+    _loop_thread = threading.Thread(target=_loop.run_forever, daemon=True)
+    _loop_thread.start()
 
 
 def _run_async(coro):
-    global _loop
-    try:
-        loop = asyncio.get_running_loop()
-        return loop.run_until_complete(asyncio.ensure_future(coro))
-    except RuntimeError:
-        if _loop is None or _loop.is_closed():
-            _loop = asyncio.new_event_loop()
-            asyncio.set_event_loop(_loop)
-        return _loop.run_until_complete(coro)
+    _start_loop()
+    future = asyncio.run_coroutine_threadsafe(coro, _loop)
+    return future.result()
 
 
 def get_client():
     global _client, _fetcher
     if _client is None:
+        _start_loop()
         _client = MarketClient(monitor_market_state=False, api_call_rate=1.0, api_burst=1)
         ok = _run_async(_client.connect())
         if not ok:
@@ -93,8 +102,11 @@ def analyze(ticker: str):
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503
     name, market = info
-    result = _run_async(analyze_stock(fetcher, ticker, market, name))
-    return jsonify(result)
+    try:
+        result = _run_async(analyze_stock(fetcher, ticker, market, name))
+        return jsonify(result)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
 
 @app.route("/scan")
@@ -103,26 +115,25 @@ def scan():
     tickers = list(UNIVERSE.items())
     if limit > 0:
         tickers = tickers[:limit]
+
+    cache_key = f"scan_{limit}_{len(tickers)}"
+    cached = _scan_cache.get(cache_key)
+    if cached and time.time() - cached["ts"] < SCAN_CACHE_TTL:
+        return jsonify(cached["data"])
+
     try:
         _, fetcher = get_client()
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503
-    results = _run_async(rate_limited_scan(fetcher, tickers, analyze_stock))
-    return jsonify(results)
-
-
-@app.route("/report")
-def report():
-    limit = int(request.args.get("limit", 0))
-    tickers = list(UNIVERSE.items())
-    if limit > 0:
-        tickers = tickers[:limit]
     try:
-        _, fetcher = get_client()
-    except RuntimeError as e:
-        return f"<h2>오류: {e}</h2>", 503
+        results = _run_async(rate_limited_scan(fetcher, tickers, analyze_stock))
+        _scan_cache[cache_key] = {"data": results, "ts": time.time()}
+        return jsonify(results)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
-    results = _run_async(rate_limited_scan(fetcher, tickers, analyze_stock))
+
+def _format_rows(results):
     rows = []
     for r in results:
         rows.append({
@@ -138,29 +149,53 @@ def report():
             "high_score": r["scores"]["high"]["score"],
             "inst_score": r["scores"]["inst"]["score"],
         })
-    return render_template("leading_report.html", rows=rows, generated_at=dt.now().strftime("%Y-%m-%d %H:%M"))
+    return rows
 
 
-@app.route("/report/download")
-def report_download():
+@app.route("/report")
+def report():
+    limit = int(request.args.get("limit", 0))
+    tickers = list(UNIVERSE.items())
+    if limit > 0:
+        tickers = tickers[:limit]
+
+    cache_key = f"report_{limit}_{len(tickers)}"
+    cached = _scan_cache.get(cache_key)
+    if cached and time.time() - cached["ts"] < SCAN_CACHE_TTL:
+        return render_template("leading_report.html", rows=_format_rows(cached["data"]),
+                               generated_at=dt.now().strftime("%Y-%m-%d %H:%M"))
+
     try:
         _, fetcher = get_client()
     except RuntimeError as e:
         return f"<h2>오류: {e}</h2>", 503
-    results = _run_async(rate_limited_scan(fetcher, list(UNIVERSE.items()), analyze_stock))
-    rows = []
-    for r in results:
-        rows.append({
-            "ticker": r["ticker"], "name": r["name"], "market": r["market"],
-            "price": f"{r['current_price']:,}", "change_pct": r["change_pct"],
-            "total_score": r["total_score"], "grade": r["grade"],
-            "grade_label": r["grade_label"], "is_leader": r["is_leader"],
-            "rs_score": r["scores"]["rs"]["score"],
-            "vol_score": r["scores"]["vol"]["score"],
-            "ma_score": r["scores"]["ma"]["score"],
-            "high_score": r["scores"]["high"]["score"],
-            "inst_score": r["scores"]["inst"]["score"],
-        })
+    try:
+        results = _run_async(rate_limited_scan(fetcher, tickers, analyze_stock))
+        _scan_cache[cache_key] = {"data": results, "ts": time.time()}
+        return render_template("leading_report.html", rows=_format_rows(results),
+                               generated_at=dt.now().strftime("%Y-%m-%d %H:%M"))
+    except Exception as e:
+        return f"<h2>오류: {e}</h2>", 500
+
+
+@app.route("/report/download")
+def report_download():
+    cache_key = "report_download"
+    cached = _scan_cache.get(cache_key)
+    if cached and time.time() - cached["ts"] < SCAN_CACHE_TTL:
+        results = cached["data"]
+    else:
+        try:
+            _, fetcher = get_client()
+        except RuntimeError as e:
+            return f"<h2>오류: {e}</h2>", 503
+        try:
+            results = _run_async(rate_limited_scan(fetcher, list(UNIVERSE.items()), analyze_stock))
+            _scan_cache[cache_key] = {"data": results, "ts": time.time()}
+        except Exception as e:
+            return f"<h2>오류: {e}</h2>", 500
+
+    rows = _format_rows(results)
     html = render_template("leading_report.html", rows=rows)
     buf = io.BytesIO(html.encode("utf-8"))
     fname = f"주도주_리포트_{dt.now().strftime('%Y%m%d_%H%M')}.html"
