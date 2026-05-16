@@ -30,6 +30,11 @@ samples: ## 샘플 목록 출력
 			printf "  \033[36m%-35s\033[0m %s\n" "$$name" "$$desc"; \
 		done
 	@echo ""
+	@if [ -d samples/leading_stock ]; then \
+		echo "  \033[36mleading_stock/                    \033[0m 주도주 분석 미니 프로젝트 (Flask 웹)"; \
+		echo "    실행: PYTHONPATH=. $(PYTHON) -m samples.leading_stock.run"; \
+	fi
+	@echo ""
 	@echo "실행: PYTHONPATH=. $(PYTHON) samples/<파일명>.py"
 
 clean: ## __pycache__ / .pytest_cache / .venv 등 임시 파일 정리

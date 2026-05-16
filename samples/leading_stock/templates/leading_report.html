@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<title>LeadingStock 리포트</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Noto Sans KR', sans-serif; background: #fff; color: #1f2328; padding: 2rem; }
+  h1 { margin-bottom: .5rem; }
+  p { color: #656d76; margin-bottom: 1.5rem; }
+  table { width: 100%; border-collapse: collapse; }
+  th { text-align: left; padding: .5rem; background: #f6f8fa; border-bottom: 2px solid #d0d7de; font-size: .8rem; color: #656d76; }
+  td { padding: .5rem; border-bottom: 1px solid #d0d7de; font-size: .9rem; }
+  tr:hover { background: #f6f8fa; }
+  .grade-A { color: #1a7f37; font-weight: 600; }
+  .grade-B { color: #0969da; font-weight: 600; }
+  .grade-C { color: #9a6700; font-weight: 600; }
+  .grade-D { color: #cf222e; font-weight: 600; }
+  .leader { background: #dafbe1; }
+  .num { text-align: right; font-variant-numeric: tabular-nums; }
+  .center { text-align: center; }
+  .actions { margin-bottom: 1rem; }
+  .btn { background: #0969da; color: #fff; border: none; padding: .5rem 1rem; border-radius: 6px; cursor: pointer; }
+  .btn:hover { background: #0550ae; }
+</style>
+</head>
+<body>
+<h1>📊 LeadingStock — LSBase 기반 주도주 분석 리포트</h1>
+<p>분석 시간: {{ generated_at }}</p>
+
+<table>
+<thead>
+<tr>
+  <th>순위</th><th>종목명</th><th>코드</th><th>시장</th><th class="num">현재가</th>
+  <th class="num">등락률</th><th class="num">종합</th><th class="num">RS</th><th class="num">거래량</th>
+  <th class="num">MA</th><th class="num">고점</th><th class="num">수급</th><th>등급</th><th>경고</th>
+</tr>
+</thead>
+<tbody>
+{% for r in rows %}
+<tr class="{% if r.is_leader %}leader{% endif %}">
+  <td>{{ loop.index }}</td>
+  <td><strong>{{ r.name }}</strong></td>
+  <td style="color:#656d76;font-size:.85rem">{{ r.ticker }}</td>
+  <td>{{ r.market }}</td>
+  <td class="num">{{ r.price }}</td>
+  <td class="num" style="color:{% if r.change_pct|float >= 0 %}#1a7f37{% else %}#cf222e{% endif %}">
+    {{ r.change_pct }}%
+  </td>
+  <td class="num" style="font-weight:600">{{ r.total_score }}</td>
+  <td class="num">{{ r.rs_score }}</td>
+  <td class="num">{{ r.vol_score }}</td>
+  <td class="num">{{ r.ma_score }}</td>
+  <td class="num">{{ r.high_score }}</td>
+  <td class="num">{{ r.inst_score }}</td>
+  <td class="grade-{{ r.grade }}">{{ r.grade_label }}</td>
+  <td class="center">{{ '⚠️' if r.signals_count > 0 else '' }}</td>
+</tr>
+{% endfor %}
+</tbody>
+</table>
+<p style="margin-top:1.5rem;color:#656d76;font-size:.85rem">
+  ※ LSBase(LS증권 API) 기반 분석. 종합점수 100점 만점(RS 30 + 거래량 20 + MA 20 + 52주고점 15 + 수급 15).
+  초록색 행 = 주도주(60점↑). 분석에는 LS증권 API 키와 계좌가 필요합니다.
+</p>
+</body>
+</html>

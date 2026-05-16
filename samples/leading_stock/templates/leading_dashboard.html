@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LeadingStock — LSBase 주도주 분석</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, 'Noto Sans KR', sans-serif; background: #0d1117; color: #c9d1d9; padding: 2rem; }
+  h1 { color: #58a6ff; margin-bottom: .5rem; }
+  p { color: #8b949e; margin-bottom: 2rem; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(200px, 1fr)); gap: .75rem; }
+  .card { background: #161b22; border: 1px solid #30363d; border-radius: 8px; padding: 1rem; cursor: pointer; transition: .15s; }
+  .card:hover { border-color: #58a6ff; background: #1c2128; }
+  .card .ticker { font-size: .8rem; color: #8b949e; }
+  .card .name { font-size: 1rem; font-weight: 600; margin: .25rem 0; }
+  .card .market { display: inline-block; font-size: .7rem; padding: 2px 6px; border-radius: 4px; }
+  .kospi { background: #1f6feb33; color: #58a6ff; }
+  .kosdaq { background: #23863633; color: #3fb950; }
+  .actions { margin-bottom: 2rem; }
+  .btn { background: #238636; color: #fff; border: none; padding: .6rem 1.5rem; border-radius: 6px; cursor: pointer; font-size: .9rem; }
+  .btn:hover { background: #2ea043; }
+  .btn-outline { background: transparent; border: 1px solid #30363d; color: #c9d1d9; margin-left: .5rem; }
+  .btn-outline:hover { border-color: #58a6ff; }
+  #result { margin-top: 2rem; }
+  .loading { display: none; color: #8b949e; padding: 2rem; text-align: center; }
+  .error { color: #f85149; padding: 1rem; background: #2d1b1b; border-radius: 6px; margin-top: 1rem; }
+</style>
+</head>
+<body>
+<h1>📊 LeadingStock</h1>
+<p>LSBase API 기반 주도주 분석 — 종목을 선택하거나 전체 스캔을 실행하세요</p>
+
+<div class="actions">
+  <button class="btn" onclick="scanAll()">🔍 전체 스캔</button>
+  <button class="btn btn-outline" onclick="openReport()">📄 리포트 보기</button>
+</div>
+
+<div id="loading" class="loading">⏳ 분석 중... (1종목당 약 3~5초 소요)</div>
+<div id="result"></div>
+
+<h2 style="margin: 2rem 0 1rem">📈 종목 선택</h2>
+<div class="grid" id="universe"></div>
+
+<script>
+const universe = {{ universe | tojson }};
+const grid = document.getElementById('universe');
+universe.forEach(([ticker, [name, market]]) => {
+  const card = document.createElement('div');
+  card.className = 'card';
+  card.innerHTML = `<div class="ticker">${ticker}</div>
+    <div class="name">${name}</div>
+    <span class="market ${market.toLowerCase()}">${market}</span>`;
+  card.onclick = () => analyze(ticker, name, market);
+  grid.appendChild(card);
+});
+
+async function analyze(ticker, name, market) {
+  const div = document.getElementById('result');
+  div.innerHTML = `<div class="loading" style="display:block">🔍 ${name}(${ticker}) 분석 중...</div>`;
+  try {
+    const res = await fetch(`/analyze/${ticker}`);
+    const data = await res.json();
+    if (data.error) { div.innerHTML = `<div class="error">${data.error}</div>`; return; }
+    const grade = data.grade_color === 'success' ? '🟢' : data.grade_color === 'primary' ? '🔵' : data.grade_color === 'warning' ? '🟡' : '🔴';
+    let html = `<div style="background:#161b22;border:1px solid #30363d;border-radius:8px;padding:1.5rem">
+      <h2 style="color:#f0f6fc">${grade} ${data.name} (${data.ticker})</h2>
+      <p style="color:#8b949e">${data.market} · 종합점수 <strong style="color:#58a6ff;font-size:1.2rem">${data.total_score}</strong> / 100 ·
+      <span style="color:${data.total_score >= 60 ? '#3fb950' : '#f85149'}">${data.grade_label}</span></p>
+      <p>현재가: <strong>${data.current_price.toLocaleString()}</strong>원
+      (${data.change_pct >= 0 ? '▲' : '▼'} ${Math.abs(data.change_pct).toFixed(2)}%)</p>
+      <hr style="border-color:#30363d;margin:1rem 0">
+      <div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:1rem">`;
+    for (const [key, s] of Object.entries(data.scores)) {
+      const pct = s.max > 0 ? Math.round(s.score / s.max * 100) : 0;
+      html += `<div style="background:#0d1117;padding:.8rem;border-radius:6px">
+        <div style="font-size:.8rem;color:#8b949e">${s.label}</div>
+        <div style="font-size:1.3rem;font-weight:600;color:#f0f6fc">${s.score}<span style="font-size:.8rem;color:#8b949e">/${s.max}</span></div>
+        <div style="height:4px;background:#21262d;border-radius:2px;margin-top:4px">
+          <div style="height:100%;width:${pct}%;background:#58a6ff;border-radius:2px"></div>
+        </div>
+      </div>`;
+    }
+    html += `</div>`;
+    if (data.dropout_signals && data.dropout_signals.length) {
+      html += `<hr style="border-color:#30363d;margin:1rem 0"><h3 style="color:#f85149">⚠️ 탈락 신호</h3>`;
+      data.dropout_signals.forEach(s => {
+        html += `<div style="margin:.5rem 0;padding:.5rem;background:#2d1b1b;border-radius:4px;font-size:.9rem">
+          ${s.icon} <strong>${s.제목}</strong> — ${s.설명}</div>`;
+      });
+    }
+    html += `</div>`;
+    div.innerHTML = html;
+  } catch(e) {
+    div.innerHTML = `<div class="error">요청 실패: ${e.message}</div>`;
+  }
+}
+
+async function scanAll() {
+  const loading = document.getElementById('loading');
+  const result = document.getElementById('result');
+  loading.style.display = 'block';
+  result.innerHTML = '';
+  try {
+    const res = await fetch('/scan?limit=10');
+    const data = await res.json();
+    loading.style.display = 'none';
+    if (data.error) { result.innerHTML = `<div class="error">${data.error}</div>`; return; }
+    let html = '<h2 style="margin-bottom:1rem">📊 스캔 결과 (TOP 10)</h2>';
+    data.forEach((r, i) => {
+      const g = r.grade === 'A' ? '🟢' : r.grade === 'B' ? '🔵' : r.grade === 'C' ? '🟡' : '🔴';
+      html += `<div style="display:flex;align-items:center;gap:1rem;padding:.6rem;background:#161b22;border:1px solid #30363d;border-radius:6px;margin-bottom:.5rem;cursor:pointer" onclick="analyze('${r.ticker}','${r.name}','${r.market}')">
+        <div style="font-weight:600;min-width:2rem">${i+1}</div>
+        <div style="font-size:1.5rem">${g}</div>
+        <div style="flex:1"><strong>${r.name}</strong> <span style="color:#8b949e;font-size:.85rem">${r.ticker}</span></div>
+        <div style="color:#8b949e;font-size:.85rem">${r.market}</div>
+        <div style="font-weight:600;color:#58a6ff;min-width:3rem;text-align:right">${r.total_score}</div>
+      </div>`;
+    });
+    result.innerHTML = html;
+  } catch(e) {
+    loading.style.display = 'none';
+    result.innerHTML = `<div class="error">스캔 실패: ${e.message}</div>`;
+  }
+}
+
+function openReport() {
+  window.open('/report', '_blank');
+}
+</script>
+</body>
+</html>

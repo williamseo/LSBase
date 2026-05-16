@@ -107,6 +107,26 @@ client.overseas_futures.get_quote("CL")        # 해외선물
 | `samples/sample_chart_nmin.py` | N분봉 차트 연속조회 |
 | `samples/full_order_cycle.py` | 주문 전체 사이클 |
 
+## 주도주 분석 미니 프로젝트
+
+`LSBase`의 API를 활용한 주도주(Leading Stock) 분석 Flask 웹앱입니다.
+
+```bash
+# 추가 패키지 설치
+pip install flask pandas numpy
+
+# 실행
+python -m samples.leading_stock.run
+
+# 접속: http://localhost:5000
+```
+
+**구성:**
+- `data_fetcher.py` — LSBase `MarketClient`로 OHLCV/지수/수급 데이터 수집
+- `analyzer.py` — 상대강도(RS), 거래량, 이동평균, 52주고점, 기관/외국인 수급 스코어링
+- `app.py` — Flask 웹 대시보드 (종목 분석, 전체 스캔, 리포트)
+- `templates/` — HTML 템플릿
+
 ## API 호출 속도 제한
 
 기본 5회/초, burst 5. 설정 변경:
@@ -153,6 +173,7 @@ LSBase/
 │   │   └── update_api_specs.py# API 스크레이퍼
 │   └── _tr_specs.py           # (자동 생성) 364개 TR 명세
 ├── samples/
+│   ├── leading_stock/         # 주도주 분석 미니 프로젝트 (Flask 웹)
 │   ├── sample_get_price.py    # 주식 현재가 조회
 │   ├── sample_place_order.py  # 지정가 주문
 │   ├── full_order_cycle.py    # 주문 전체 사이클
