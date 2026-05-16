@@ -149,15 +149,14 @@ class LSDataFetcher:
 
 async def rate_limited_scan(fetcher, tickers, analyze_func):
     results = []
-    total = len(tickers)
     for i, (ticker, (name, market)) in enumerate(tickers):
         try:
+            if i > 0:
+                await asyncio.sleep(1.2)
             r = await analyze_func(fetcher, ticker, market)
             if "error" not in r:
                 results.append(r)
         except Exception as e:
-            logger.warning("Scan %s failed: %s", ticker, e)
-        if i % 3 == 0:
-            await asyncio.sleep(0.5)
+            logger.warning("Scan %s (%s) failed: %s", name, ticker, e)
     results.sort(key=lambda x: x["total_score"], reverse=True)
     return results

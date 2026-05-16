@@ -2,13 +2,10 @@ from __future__ import annotations
 
 import asyncio
 import io
-import json
 import logging
-import os
-import time
+from datetime import datetime as dt
 
 import numpy as np
-import pandas as pd
 from flask import Flask, jsonify, render_template, request, send_file
 
 from lsbase import MarketClient
@@ -65,13 +62,33 @@ UNIVERSE = {
 
 app = Flask(__name__)
 
+_client: MarketClient | None = None
+_fetcher: LSDataFetcher | None = None
+_loop: asyncio.AbstractEventLoop | None = None
+
 
 def _run_async(coro):
+    global _loop
     try:
         loop = asyncio.get_running_loop()
+        return loop.run_until_complete(asyncio.ensure_future(coro))
     except RuntimeError:
-        return asyncio.run(coro)
-    return loop.run_until_complete(asyncio.ensure_future(coro))
+        if _loop is None or _loop.is_closed():
+            _loop = asyncio.new_event_loop()
+            asyncio.set_event_loop(_loop)
+        return _loop.run_until_complete(coro)
+
+
+def get_client():
+    global _client, _fetcher
+    if _client is None:
+        _client = MarketClient(monitor_market_state=False, api_call_rate=2.0, api_burst=3)
+        ok = _run_async(_client.connect())
+        if not ok:
+            raise RuntimeError(f"LS증권 API 연결 실패: {_client._open_api.last_message}")
+        _fetcher = LSDataFetcher(_client)
+        logger.info("MarketClient 연결 완료 (rate=2/s, burst=3)")
+    return _client, _fetcher
 
 
 @app.route("/")
@@ -84,20 +101,12 @@ def analyze(ticker: str):
     info = UNIVERSE.get(ticker)
     if not info:
         return jsonify({"error": f"Unknown ticker: {ticker}"}), 404
+    try:
+        _, fetcher = get_client()
+    except RuntimeError as e:
+        return jsonify({"error": str(e)}), 503
     name, market = info
-
-    async def _run():
-        client = MarketClient(monitor_market_state=False)
-        try:
-            if not await client.connect():
-                return {"error": "LS증권 API 연결 실패"}
-            fetcher = LSDataFetcher(client)
-            result = await analyze_stock(fetcher, ticker, market)
-            return result
-        finally:
-            await client.disconnect()
-
-    result = _run_async(_run())
+    result = _run_async(analyze_stock(fetcher, ticker, market))
     return jsonify(result)
 
 
@@ -107,20 +116,11 @@ def scan():
     tickers = list(UNIVERSE.items())
     if limit > 0:
         tickers = tickers[:limit]
-
-    async def _run():
-        client = MarketClient(monitor_market_state=False)
-        try:
-            if not await client.connect():
-                return {"error": "LS증권 API 연결 실패"}
-            fetcher = LSDataFetcher(client)
-            return await rate_limited_scan(fetcher, tickers, analyze_stock)
-        finally:
-            await client.disconnect()
-
-    results = _run_async(_run())
-    if isinstance(results, dict) and "error" in results:
-        return jsonify(results), 503
+    try:
+        _, fetcher = get_client()
+    except RuntimeError as e:
+        return jsonify({"error": str(e)}), 503
+    results = _run_async(rate_limited_scan(fetcher, tickers, analyze_stock))
     return jsonify(results)
 
 
@@ -130,33 +130,19 @@ def report():
     tickers = list(UNIVERSE.items())
     if limit > 0:
         tickers = tickers[:limit]
+    try:
+        _, fetcher = get_client()
+    except RuntimeError as e:
+        return f"<h2>오류: {e}</h2>", 503
 
-    async def _run():
-        client = MarketClient(monitor_market_state=False)
-        try:
-            if not await client.connect():
-                return {"error": "LS증권 API 연결 실패"}
-            fetcher = LSDataFetcher(client)
-            return await rate_limited_scan(fetcher, tickers, analyze_stock)
-        finally:
-            await client.disconnect()
-
-    results = _run_async(_run())
-    if isinstance(results, dict) and "error" in results:
-        return f"<h2>오류: {results['error']}</h2>", 503
-
+    results = _run_async(rate_limited_scan(fetcher, tickers, analyze_stock))
     rows = []
     for r in results:
         rows.append({
-            "ticker": r["ticker"],
-            "name": r["name"],
-            "market": r["market"],
-            "price": f"{r['current_price']:,}",
-            "change_pct": r["change_pct"],
-            "total_score": r["total_score"],
-            "grade": r["grade"],
-            "grade_label": r["grade_label"],
-            "grade_color": r["grade_color"],
+            "ticker": r["ticker"], "name": r["name"], "market": r["market"],
+            "price": f"{r['current_price']:,}", "change_pct": r["change_pct"],
+            "total_score": r["total_score"], "grade": r["grade"],
+            "grade_label": r["grade_label"], "grade_color": r["grade_color"],
             "is_leader": r["is_leader"],
             "signals_count": len(r.get("dropout_signals", [])),
             "rs_score": r["scores"]["rs"]["score"],
@@ -165,47 +151,29 @@ def report():
             "high_score": r["scores"]["high"]["score"],
             "inst_score": r["scores"]["inst"]["score"],
         })
-
-    from datetime import datetime as dt
     return render_template("leading_report.html", rows=rows, generated_at=dt.now().strftime("%Y-%m-%d %H:%M"))
 
 
 @app.route("/report/download")
 def report_download():
-    async def _run():
-        client = MarketClient(monitor_market_state=False)
-        try:
-            if not await client.connect():
-                return None
-            fetcher = LSDataFetcher(client)
-            return await rate_limited_scan(fetcher, list(UNIVERSE.items()), analyze_stock)
-        finally:
-            await client.disconnect()
-
-    results = _run_async(_run())
-    if not results:
-        return "Scan failed", 503
-
+    try:
+        _, fetcher = get_client()
+    except RuntimeError as e:
+        return f"<h2>오류: {e}</h2>", 503
+    results = _run_async(rate_limited_scan(fetcher, list(UNIVERSE.items()), analyze_stock))
     rows = []
     for r in results:
         rows.append({
-            "ticker": r["ticker"],
-            "name": r["name"],
-            "market": r["market"],
-            "price": f"{r['current_price']:,}",
-            "change_pct": r["change_pct"],
-            "total_score": r["total_score"],
-            "grade": r["grade"],
-            "grade_label": r["grade_label"],
-            "is_leader": r["is_leader"],
+            "ticker": r["ticker"], "name": r["name"], "market": r["market"],
+            "price": f"{r['current_price']:,}", "change_pct": r["change_pct"],
+            "total_score": r["total_score"], "grade": r["grade"],
+            "grade_label": r["grade_label"], "is_leader": r["is_leader"],
             "rs_score": r["scores"]["rs"]["score"],
             "vol_score": r["scores"]["vol"]["score"],
             "ma_score": r["scores"]["ma"]["score"],
             "high_score": r["scores"]["high"]["score"],
             "inst_score": r["scores"]["inst"]["score"],
         })
-
-    from datetime import datetime as dt
     html = render_template("leading_report.html", rows=rows)
     buf = io.BytesIO(html.encode("utf-8"))
     fname = f"주도주_리포트_{dt.now().strftime('%Y%m%d_%H%M')}.html"
