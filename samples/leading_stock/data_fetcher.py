@@ -165,7 +165,7 @@ async def rate_limited_scan(fetcher, tickers, analyze_func):
             if i > 0:
                 await asyncio.sleep(1.2)
             logger.info("스캔 %d/%d: %s(%s) 분석 시작...", i + 1, total, name, ticker)
-            r = await analyze_func(fetcher, ticker, market)
+            r = await analyze_func(fetcher, ticker, market, name)
             if "error" not in r:
                 results.append(r)
                 logger.info("  → %s: %d점 (%s)", name, r["total_score"], r["grade_label"])

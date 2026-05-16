@@ -280,15 +280,14 @@ def detect_dropout_signals(ohlcv, trading_df, total_score):
     return signals
 
 
-async def analyze_stock(fetcher, ticker: str, market: str = "KOSPI") -> dict:
-    ohlcv = await fetcher.get_stock_ohlcv(ticker, days=130)
+async def analyze_stock(fetcher, ticker: str, market: str = "KOSPI", name: str = "") -> dict:
+    ohlcv = await fetcher.get_stock_ohlcv(ticker, days=120)
     if ohlcv is None or len(ohlcv) < 20:
         return {"ticker": ticker, "error": "데이터 조회 실패", "total_score": 0}
 
     upcode = "001" if market == "KOSPI" else "301"
-    index_series = await fetcher.get_index_series(upcode, days=130)
+    index_series = await fetcher.get_index_series(upcode, days=120)
     trading_df = await fetcher.get_investor_trading(ticker, days=20)
-    name = await fetcher.get_stock_name(ticker)
 
     rs_score, rs_details = calc_rs_score(ohlcv, index_series)
     vol_score, vol_details = calc_volume_score(ohlcv)

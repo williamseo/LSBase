@@ -93,7 +93,7 @@ def analyze(ticker: str):
     except RuntimeError as e:
         return jsonify({"error": str(e)}), 503
     name, market = info
-    result = _run_async(analyze_stock(fetcher, ticker, market))
+    result = _run_async(analyze_stock(fetcher, ticker, market, name))
     return jsonify(result)
 
 
