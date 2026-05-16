@@ -2,140 +2,167 @@
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-`LSBase`는 LS증권(구 이베스트투자증권) Open API를 더 쉽고, 더 안전하며, 더 Pythonic하게 사용할 수 있도록 설계된 차세대 비동기 프레임워크입니다. 복잡한 API 명세를 **Pydantic 모델로 자동 생성**하고 객체 지향적으로 추상화하여, 개발자가 API 문서의 함정에 빠지지 않고 비즈니스 로직에만 집중할 수 있도록 돕습니다.
+`LSBase`는 LS증권(구 이베스트투자증권) Open API를 Pythonic하게 사용할 수 있도록 설계된 비동기 프레임워크입니다.
+`TrSpec` + `SpecRepository`를 기반으로 **타입 안정성, 자동 검증, 시장별 다형성**을 제공합니다.
 
-## 📜 개요
+## 주요 특징
 
-LS증권 Open API는 강력하지만, 수백 개의 TR 코드와 복잡한 데이터 구조, 미묘한 타입 불일치 등 직접 다루기에는 많은 어려움이 따릅니다. `LSBase`는 이러한 모든 복잡성을 내부적으로 처리하는 강력한 추상화 계층을 제공하며, `asyncio` 기반으로 설계되어 실시간 데이터 처리와 다수의 API 요청을 매우 효율적으로 관리합니다.
+- **`TrSpec` 명세 추상화** — 364개 TR을 Pydantic 모델로 관리, TR 코드로 즉시 조회
+- **`build_request()` 자동 검증** — 필수 필드 체크 + 타입 변환 + 길이 검증
+- **`ContinuationSpec` 선언적 연속조회** — heuristic 제거, 명세 기반 페이지네이션
+- **시장별 다형성** — 주식/선물/해외주식/해외선물 동일 인터페이스
+- **`Throttler` 속도 제한** — Token bucket 알고리즘으로 API 호출 제한 자동 준수
+- **완전 비동기** — `asyncio` + `aiohttp` 기반
+- **`generated_models.py` 불필요** — 1,547개 Pydantic 클래스 대신 경량 TrSpec
 
-## ✨ 주요 특징
-
--   **🚀 API 모델 자동 생성**: `tools/`의 스크립트를 실행하는 것만으로 최신 API 명세에 맞는 모든 Pydantic 모델을 자동으로 생성합니다. API가 변경되어도 코드 수정 없이 즉시 대응할 수 있습니다.
--   **🔒 강력한 타입 안정성**: 모든 API 요청과 응답 데이터는 Pydantic 모델을 통해 검증됩니다. 이를 통해 서버로 잘못된 요청을 보내거나, 예상치 못한 응답을 받는 경우를 사전에 차단하여 런타임 오류를 획기적으로 줄여줍니다.
--   **⚡ 완전 비동기 처리**: `asyncio`와 `aiohttp`를 기반으로 설계되어 I/O 병목 현상 없이 빠르고 효율적인 API 요청 및 실시간 데이터 처리가 가능합니다.
--   **🧩 포괄적인 주식 시장 기능**:
-    -   **주문**: 지정가/시장가 주문 (`place_order`), 정정 (`modify_order`), 취소 (`cancel_order`)
-    -   **계좌**: 예수금 및 잔고 조회 (`get_account_balance`), 보유 종목 포트폴리오 조회 (`get_portfolio`)
-    -   **시세**: 현재가 조회 (`get_quote`), 시가총액 상위 조회 (`get_top_market_cap_stocks`)
-    -   **실시간 처리**: 주문 접수, 체결, 정정, 취소 등 실시간 주문 상태 수신
--   **🔄 자동 연속 조회**: 여러 페이지에 걸쳐 데이터를 요청해야 하는 경우, 프레임워크가 복잡한 연속 조회 로직을 자동으로 처리합니다.
--   **🔐 간편한 환경 설정**: `.env` 파일을 통해 API 키와 계좌 정보를 안전하고 쉽게 관리할 수 있습니다.
-
-## 🏁 시작하기
-
-### 사전 준비
-
-1.  **Python 3.8 이상**
-2.  LS증권 Open API 사용 신청 후 **APP KEY**와 **APP SECRET** 발급
-3.  모의투자 또는 실제 투자 계좌 정보
-
-### 설치 및 설정
-
-1.  **프로젝트 클론**
-    ```bash
-    git clone https://github.com/your-username/LSBase.git
-    cd LSBase
-    ```
-
-2.  **가상 환경 생성 및 활성화 (권장)**
-    ```bash
-    python -m venv venv
-    source venv/bin/activate  # Windows: venv\Scripts\activate
-    ```
-
-3.  **필요한 라이브러리 설치**
-    ```bash
-    pip install -r requirements.txt
-    ```
-
-4.  **환경 변수 설정**
-    프로젝트 루트에 `.env` 파일을 생성하고 자신의 정보를 입력하세요.
-    ```env
-    # .env
-    APP_KEY="여기에_발급받은_APP_KEY를_입력하세요"
-    APP_SECRET="여기에_발급받은_APP_SECRET을_입력하세요"
-    ACCOUNT_NO="계좌번호_앞_8자리"
-    ACCOUNT_PASSWORD="계좌_비밀번호"
-    ```
-
-5.  **(최초 1회 필수) API 모델 생성**
-    `LSBase`는 API 명세에 기반한 모델 파일을 필요로 합니다. 아래 스크립트를 실행하여 최신 명세 파일을 다운로드하고, 이를 기반으로 `lsbase/generated_models.py` 파일을 생성하세요.
-    ```bash
-    # tools 디렉토리로 이동
-    cd lsbase/tools
-    
-    # 1. 최신 API 명세 스크레이핑 (시간이 다소 소요될 수 있습니다)
-    python update_api_specs.py full
-
-    # 2. Pydantic 모델 파일 생성
-    python generate_code.py
-
-    # 3. 프로젝트 루트로 복귀
-    cd ../..
-    ```
-    *LS증권 API가 업데이트될 경우, 이 과정만 반복하면 라이브러리를 최신 상태로 유지할 수 있습니다.*
-
-## 🚀 사용법 예제
-
-### `full_order_cycle.py`: 주문 전체 사이클 테스트
-
-이 예제는 `LSBase`의 핵심 기능을 모두 사용하여 **[지정가 주문 → 정정 → 취소 → 시장가 체결]** 의 전체 시나리오를 실행하고, 모든 과정에서 발생하는 실시간 주문 상태를 수신하여 출력합니다.
-
-**실행:**
-```bash
-python full_order_cycle.py
-```
-
-**예상 출력:**
-```
-실시간 주문 상태 수신을 시작합니다. (계좌: ...)
-
---- [1/4] 90,000원에 지정가 매수 주문 요청 ---
-✅ 초기 주문 요청 성공! (주문번호: 12581)
-
-======================================
-📢 [실시간 주문 상태 수신]
-   - 상태: 주문접수 (SC0)
-   - 주문번호: 12581
-======================================
-
---- [2/4] 주문번호 12581을 92,000원으로 정정 요청 ---
-✅ 주문 정정 요청 성공! (새 주문번호: 12583)
-
-======================================
-📢 [실시간 주문 상태 수신]
-   - 상태: 주문정정 (SC2)
-   - 주문번호: 12583
-======================================
-
-... (이후 취소, 시장가 주문, 체결 과정이 순차적으로 출력됩니다) ...
-```
-
-## 📂 프로젝트 구조
+## 설치
 
 ```bash
+git clone https://github.com/williamseo/LSBase.git
+cd LSBase
+python -m venv venv && source venv/bin/activate
+pip install -r requirements.txt
+```
+
+## 설정
+
+`.env` 파일 생성:
+```env
+APP_KEY="발급받은_APP_KEY"
+APP_SECRET="발급받은_APP_SECRET"
+ACCOUNT_NO="계좌번호_8자리"
+ACCOUNT_PASSWORD="계좌비밀번호"
+```
+
+## (최초 1회) TR 명세 생성
+
+```bash
+python lsbase/tools/generate_specs.py
+```
+
+`lsbase/_tr_specs.py`가 생성됩니다 (364개 TR).
+
+## 빠른 시작
+
+### 주식 현재가 조회
+
+```python
+import asyncio
+from lsbase import MarketClient
+
+async def main():
+    client = MarketClient()
+    await client.connect()
+
+    quote = await client.stock.get_quote("005930")
+    print(f"{quote.symbol_name}: {quote.current_price:,.0f}원")
+
+    await client.disconnect()
+
+asyncio.run(main())
+```
+
+### TR 코드로 직접 조회
+
+```python
+tr = client._repo["t1102"]
+packet = tr.build_request({"shcode": "005930"})
+response = await client._api.query("t1102", packet)
+data = tr.parse_response(response.body)
+```
+
+### 연속조회 (자동 페이지네이션)
+
+```python
+tr = client._repo["t1444"]
+async for item in client._api.continuous_query(tr.code, params, spec=tr):
+    print(item["hname"], item["price"])
+```
+
+## 시장별 인터페이스
+
+```python
+client.stock.get_quote("005930")              # 주식
+client.futures.get_quote("101P3000")           # 선물/옵션
+client.overseas.get_quote("TSLA", "82")        # 해외주식
+client.overseas_futures.get_quote("CL")        # 해외선물
+```
+
+## 샘플 목록
+
+| 파일 | 설명 |
+|------|------|
+| `sample_get_price.py` | 주식 현재가 조회 |
+| `sample_get_balance.py` | 계좌 잔고 조회 |
+| `sample_get_top_stocks.py` | 시가총액 상위 조회 |
+| `sample_place_order.py` | 지정가 주문 |
+| `sample_high_value_stocks.py` | 거래대금 200억 이상 종목 |
+| `sample_continuous_demo.py` | 연속조회 + ContinuationSpec 데모 |
+| `sample_futures_quote.py` | 선물 현재가 |
+| `sample_overseas_quote_simple.py` | 해외주식 현재가 |
+| `sample_ofutures_quote.py` | 해외선물 현재가 |
+| `sample_realtime_monitor.py` | 실시간 체결 모니터링 |
+| `sample_foreign_trend.py` | 외인/기관 매매동향 |
+| `sample_new_high_low.py` | 신고가/신저가 연속조회 |
+| `sample_chart_nmin.py` | N분봉 차트 연속조회 |
+| `full_order_cycle.py` | 주문 전체 사이클 |
+
+## API 호출 속도 제한
+
+기본 5회/초, burst 5. 설정 변경:
+
+```python
+client = MarketClient(api_call_rate=10.0, api_burst=10)
+```
+
+## TR 검색 도구
+
+```bash
+python searchtr.py t1102            # TR 상세 조회
+python searchtr.py --search 현재가    # TR 검색
+```
+
+## 테스트
+
+```bash
+pip install pytest pytest-asyncio
+python -m pytest tests/
+```
+
+## 프로젝트 구조
+
+```
 LSBase/
 ├── lsbase/
-│   ├── api_client/          # API 클라이언트 구현체
-│   ├── core/                # 핵심 인터페이스, 모델, 예외 정의
-│   ├── markets/             # 주식, 선물 등 시장별 기능 구현
-│   ├── openapi_client/      # 저수준 OpenApi 래퍼 클래스
-│   ├── tools/               # 🚀 API 모델 자동 생성 도구
-│   └── generated_models.py  # (자동 생성) 모든 TR의 Pydantic 모델
-├── examples/                # 사용법 예제 스크립트 모음
-├── .env                     # (사용자 생성) API 키 등 민감 정보
-├── requirements.txt         # 의존성 라이브러리 목록
-└── README.md
+│   ├── core/
+│   │   ├── spec_models.py     # TrSpec, FieldSpec, SpecRepository
+│   │   ├── throttler.py       # API 호출 속도 제한
+│   │   ├── models.py          # 고수층 응답 모델
+│   │   ├── base.py            # MarketBase 추상 클래스
+│   │   └── api_interface.py   # TradingAPI 인터페이스
+│   ├── markets/
+│   │   ├── stock.py           # StockMarket
+│   │   ├── futures_options.py # FuturesOptionsMarket
+│   │   ├── overseas_stock.py  # OverseasStockMarket
+│   │   └── overseas_futures.py# OverseasFuturesMarket
+│   ├── api_client/
+│   │   └── ls_api.py          # LSTradingAPI (throttler 내장)
+│   ├── openapi_client/        # OpenApi HTTP/WS 래퍼
+│   ├── tools/
+│   │   ├── generate_specs.py  # 명세 생성기
+│   │   └── update_api_specs.py# API 스크레이퍼
+│   └── _tr_specs.py           # (자동 생성) 364개 TR 명세
+├── tests/
+│   ├── test_spec_models.py    # TrSpec 단위 테스트
+│   ├── test_throttler.py      # Throttler 테스트
+│   └── test_samples.py        # 샘플 문법 검증
+├── tools/
+│   └── validate_spec.py       # 명세 대응 검증 도구
+├── sample_*.py                # 사용 예제
+└── docs/
+    └── ROADMAP.md             # 개발 로드맵
 ```
 
-## 🔮 향후 계획
+## 라이선스
 
--   [ ] **선물/옵션 시장 지원**: `FuturesMarket` 클래스 구현
--   [ ] **종합적인 오류 처리**: API 오류 코드에 따른 구체적인 예외 처리 및 재시도 로직 강화
--   [ ] **단위 테스트 및 통합 테스트**: 코드 안정성 확보를 위한 테스트 케이스 작성
--   [ ] **문서화**: 각 모듈과 클래스에 대한 상세한 Sphinx/MkDocs 문서 작성
--   [ ] **배포**: PyPI 패키지로 배포하여 `pip install lsbase`로 설치 가능하도록 지원
-
-## 📄 라이선스
-
-이 프로젝트는 [MIT 라이선스](LICENSE.md)를 따릅니다.
+MIT
