@@ -1,5 +1,7 @@
-import aiohttp, asyncio, json, time
+import aiohttp, asyncio, json, time, logging
 from .tr_code_to_path import tr_code_to_path
+
+logger = logging.getLogger(__name__)
 from .code_realtime_account import code_realtime_account
 from ..core.resilience import (
     ConnectionManager, ConnectionState, ExponentialBackoff, ReconnectionWorker,
@@ -162,15 +164,13 @@ class OpenApi:
         FOCCQ33600 = {'FOCCQ33600InBlock1': {}}
         response = await self.request("FOCCQ33600", FOCCQ33600)
         if not response:
-            self._connected = False
-            self._last_message = "Failed to require FOCCQ33600"
-            await httpclient.close()
-            self.connection.set_state(ConnectionState.DISCONNECTED)
-            return False
-
-        rsp_msg = response.body["rsp_msg"]
-        if "모의투자" in rsp_msg:
-            self._is_simulation = True
+            logger.warning("계좌 확인(FCCCQ33600) 실패: %s — 실계좌로 간주하고 진행", self._last_message)
+            self._is_simulation = False
+        else:
+            rsp_msg = response.body.get("rsp_msg", "")
+            if "모의투자" in rsp_msg:
+                self._is_simulation = True
+                logger.info("모의투자 계정 감지")
 
         self._connected = False
         try:
