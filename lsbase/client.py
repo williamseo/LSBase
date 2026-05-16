@@ -11,6 +11,7 @@ from .markets.overseas_stock import OverseasStockMarket
 from .markets.overseas_futures import OverseasFuturesMarket
 from .logger import setup_logger
 from .core.spec_models import SpecRepository
+from .core.throttler import Throttler
 from .core.enum import RealtimeType
 from .core.models import MarketState, MarketStatus
 
@@ -18,14 +19,15 @@ from .core.models import MarketState, MarketStatus
 logger = logging.getLogger(__name__)
 
 class MarketClient:
-    def __init__(self, monitor_market_state: bool = True):
+    def __init__(self, monitor_market_state: bool = True, api_call_rate: float = 5.0, api_burst: int = 5):
         setup_logger()
 
         self._repo = SpecRepository(lazy=True)
-        logger.info("SpecRepository가 생성되었습니다.")
+        self._throttler = Throttler(rate=api_call_rate, burst=api_burst)
+        logger.info("SpecRepository + Throttler(rate=%s/s, burst=%s) 생성됨", api_call_rate, api_burst)
 
         self._open_api = OpenApi()
-        self._api = LSTradingAPI(self._open_api)
+        self._api = LSTradingAPI(self._open_api, throttler=self._throttler)
         
         self.stock = StockMarket(
             api=self._api, repo=self._repo,

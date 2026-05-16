@@ -1,51 +1,44 @@
-# lsbase/api_client/ls_api.py
-
 import asyncio
-import logging # 로깅 모듈 임포트
+import logging
 from typing import Any, Dict, AsyncGenerator, Optional
 from ..core.api_interface import TradingAPI
 from ..core.exceptions import APIRequestError, AuthenticationError, InvalidInputError, NetworkError
 from ..openapi_client.OpenApi import OpenApi, ResponseValue
 from ..core.spec_models import TrSpec
+from ..core.throttler import Throttler
 
-# 모듈 레벨 로거 설정
 logger = logging.getLogger(__name__)
 
+
 class LSTradingAPI(TradingAPI):
-    def __init__(self, open_api_client: OpenApi):
+    def __init__(self, open_api_client: OpenApi, throttler: Optional[Throttler] = None):
         self._client = open_api_client
+        self._throttler = throttler or Throttler(rate=5.0, burst=5)
 
     async def query(self, tr_code: str, params: Dict[str, Any], tr_cont: str = "N", tr_cont_key: str = "") -> ResponseValue:
-        # InBlock(요청) 데이터 로그 (DEBUG 레벨)
+        await self._throttler.acquire()
         logger.debug(f"[Request] TR: {tr_code}, InBlock: {params}")
-        
+
         try:
             response = await self._client.request(tr_code, params, tr_cont=tr_cont, tr_cont_key=tr_cont_key)
-            
-            # 응답이 아예 없는 경우 (네트워크 타임아웃 등)
+
             if not response:
                 raise NetworkError(self._client.last_message, tr_code=tr_code)
 
-            # OutBlock(응답) 데이터 로그 (DEBUG 레벨)
             logger.debug(f"[Response] TR: {tr_code}, OutBlock: {response.body}")
-            
+
             rsp_cd = response.body.get("rsp_cd")
-            # 성공이 아닌 모든 경우
-            #if rsp_cd != "00000":
             if not rsp_cd.startswith("00"):
                 msg = response.body.get("rsp_msg", "알 수 없는 오류")
-                # 특정 에러 코드에 따라 예외를 분기
-                if rsp_cd == "IGW00121": # 예시: 인증 토큰 오류 코드
+                if rsp_cd == "IGW00121":
                     raise AuthenticationError(msg, rsp_cd=rsp_cd, tr_code=tr_code)
-                if rsp_cd == "APBK0042": # 예시: 입력값 오류 코드
+                if rsp_cd == "APBK0042":
                     raise InvalidInputError(msg, rsp_cd=rsp_cd, tr_code=tr_code)
-                
-                # 그 외 일반적인 API 오류
                 raise APIRequestError(msg, rsp_cd=rsp_cd, tr_code=tr_code)
-                
+
             return response
-        
-        except asyncio.TimeoutError as e: # aiohttp 타임아웃 처리
+
+        except asyncio.TimeoutError as e:
             raise NetworkError(f"Request timed out: {e}", tr_code=tr_code) from e
 
     async def continuous_query(
@@ -95,8 +88,6 @@ class LSTradingAPI(TradingAPI):
                 if not should_continue:
                     break
 
-            await asyncio.sleep(0.5)
-
     async def _continuous_heuristic(
         self, tr_code: str, params: Dict[str, Any],
         tr_cont: str, tr_cont_key: str,
@@ -144,10 +135,12 @@ class LSTradingAPI(TradingAPI):
             else:
                 break
 
-            await asyncio.sleep(0.5)            
-
     async def subscribe_realtime(self, tr_code: str, tr_key: str) -> bool:
         return await self._client.add_realtime(tr_code, tr_key)
 
     async def unsubscribe_realtime(self, tr_code: str, tr_key: str) -> bool:
         return await self._client.remove_realtime(tr_code, tr_key)
+
+    @property
+    def throttler_stats(self) -> dict:
+        return self._throttler.stats
