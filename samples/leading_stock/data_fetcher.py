@@ -14,6 +14,16 @@ EXCHGUBUN = "K"
 class LSDataFetcher:
     def __init__(self, client):
         self._client = client
+        self._index_cache: dict[str, pd.DataFrame] = {}
+
+    async def get_index_series(self, upcode: str, days: int = 130) -> pd.DataFrame | None:
+        cache_key = f"{upcode}_{days}"
+        if cache_key in self._index_cache:
+            return self._index_cache[cache_key]
+        df = await self._fetch_index_series(upcode, days)
+        if df is not None:
+            self._index_cache[cache_key] = df
+        return df
 
     async def get_stock_ohlcv(self, ticker: str, days: int = 130) -> pd.DataFrame | None:
         tr = self._client._repo["t1305"]
@@ -54,7 +64,7 @@ class LSDataFetcher:
         df = df.set_index("Date").sort_index()
         return df
 
-    async def get_index_series(self, upcode: str, days: int = 130) -> pd.DataFrame | None:
+    async def _fetch_index_series(self, upcode: str, days: int = 130) -> pd.DataFrame | None:
         tr = self._client._repo["t1514"]
         req = tr.build_request({
             "upcode": upcode,

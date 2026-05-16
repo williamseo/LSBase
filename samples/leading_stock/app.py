@@ -69,7 +69,7 @@ def _run_async(coro):
 def get_client():
     global _client, _fetcher
     if _client is None:
-        _client = MarketClient(monitor_market_state=False, api_call_rate=2.0, api_burst=3)
+        _client = MarketClient(monitor_market_state=False, api_call_rate=1.0, api_burst=1)
         ok = _run_async(_client.connect())
         if not ok:
             raise RuntimeError(f"LS증권 API 연결 실패: {_client._open_api.last_message}")
