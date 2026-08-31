@@ -162,15 +162,23 @@ class OpenApi:
         self._http = httpclient
 
         FOCCQ33600 = {'FOCCQ33600InBlock1': {}}
-        response = await self.request("FOCCQ33600", FOCCQ33600)
-        if not response:
-            logger.warning("계좌 확인(FCCCQ33600) 실패: %s — 실계좌로 간주하고 진행", self._last_message)
-            self._is_simulation = False
+        # self.request()는 _connected 게이트가 있어 WS 연결 전(login 중)엔 항상
+        # None을 반환한다. 인증된 httpclient로 직접 조회해야 모의투자 판별이 동작한다.
+        try:
+            async with httpclient.post(
+                BASE_URL + "/stock/accno",
+                headers={"tr_cd": "FOCCQ33600", "tr_cont": "N", "tr_cont_key": "0"},
+                data=json.dumps(FOCCQ33600),
+            ) as acc_resp:
+                acc_body = json.loads(await acc_resp.text()) if acc_resp.status == 200 else {}
+        except aiohttp.ClientError as e:
+            logger.warning("계좌 확인(FOCCQ33600) 실패: %s — 실계좌로 간주하고 진행", e)
+            acc_body = {}
+        if "모의투자" in str(acc_body.get("rsp_msg", "")):
+            self._is_simulation = True
+            logger.info("모의투자 계정 감지")
         else:
-            rsp_msg = response.body.get("rsp_msg", "")
-            if "모의투자" in rsp_msg:
-                self._is_simulation = True
-                logger.info("모의투자 계정 감지")
+            self._is_simulation = False
 
         self._connected = False
         try:
